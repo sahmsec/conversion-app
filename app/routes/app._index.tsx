@@ -28,18 +28,22 @@ const WIDGET_META: Record<
   FREE_SHIPPING_BAR: {
     name: "Free Shipping Bar",
     description: "Show progress toward a free-shipping goal.",
+    route: "/app/widgets/free-shipping-bar",
   },
   CART_GOAL: {
     name: "Cart Goal",
     description: "Nudge shoppers to spend more for a reward.",
+    route: "/app/widgets/cart-goal",
   },
   TRUST_BADGES: {
     name: "Trust Badges",
     description: "Payment, SSL, and money-back icons.",
+    route: "/app/widgets/trust-badges",
   },
   ANNOUNCEMENT_BAR: {
     name: "Announcement Bar",
     description: "Rotating announcements and countdowns.",
+    route: "/app/widgets/announcement-bar",
   },
 };
 

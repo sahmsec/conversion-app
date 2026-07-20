@@ -144,3 +144,146 @@
     font-size: 0.9em;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Shared bar (Free Shipping Bar, Cart Goal, Announcement Bar)
+   --------------------------------------------------------------------------- */
+.searchaly-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 2147482000;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--sa-bg, #111827);
+  color: var(--sa-text, #ffffff);
+  font-size: var(--sa-font-size, 16px);
+  font-weight: var(--sa-font-weight, 600);
+  text-align: center;
+  transition-property: opacity, transform, visibility;
+  transition-duration: var(--sa-anim, 200ms);
+  transition-timing-function: ease;
+}
+.searchaly-bar[data-position="top"] {
+  top: 0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+}
+.searchaly-bar[data-position="bottom"] {
+  bottom: 0;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.18);
+}
+.searchaly-bar[data-animation="fade"],
+.searchaly-bar[data-animation="none"] {
+  opacity: 0;
+  visibility: hidden;
+}
+.searchaly-bar[data-animation="fade"].is-visible,
+.searchaly-bar[data-animation="none"].is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+.searchaly-bar[data-animation="none"] {
+  transition: none;
+}
+.searchaly-bar[data-animation="slide"][data-position="top"] {
+  transform: translateY(-110%);
+}
+.searchaly-bar[data-animation="slide"][data-position="bottom"] {
+  transform: translateY(110%);
+}
+.searchaly-bar[data-animation="slide"].is-visible {
+  transform: translateY(0);
+}
+
+.searchaly-bar__text {
+  line-height: 1.3;
+}
+.searchaly-bar__text a {
+  color: inherit;
+  text-decoration: underline;
+}
+.searchaly-bar__countdown {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.searchaly-bar__track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.searchaly-bar__fill {
+  height: 100%;
+  background: var(--sa-accent, #4f46e5);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+.searchaly-bar__close {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  color: inherit;
+  border: none;
+  font-size: 1.2em;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.75;
+}
+.searchaly-bar__close:hover {
+  opacity: 1;
+}
+.searchaly-bar--announcement {
+  padding-right: 32px;
+}
+
+/* ---------------------------------------------------------------------------
+   Trust badges (inline, near the product buy button)
+   --------------------------------------------------------------------------- */
+.searchaly-trust {
+  margin: 14px 0;
+}
+.searchaly-trust__heading {
+  font-size: 13px;
+  opacity: 0.75;
+  margin-bottom: 8px;
+}
+.searchaly-trust__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.searchaly-trust--left .searchaly-trust__heading {
+  text-align: left;
+}
+.searchaly-trust--center .searchaly-trust__heading {
+  text-align: center;
+}
+.searchaly-trust--right .searchaly-trust__heading {
+  text-align: right;
+}
+.searchaly-trust--left .searchaly-trust__row {
+  justify-content: flex-start;
+}
+.searchaly-trust--center .searchaly-trust__row {
+  justify-content: center;
+}
+.searchaly-trust--right .searchaly-trust__row {
+  justify-content: flex-end;
+}
+.searchaly-trust__badge {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #e1e3e5;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}

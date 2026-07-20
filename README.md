@@ -4,10 +4,11 @@ A lightweight, all-in-one **Shopify conversion-optimization app**. One dashboard
 many widgets, replacing several single-purpose apps. Built on Shopify's Remix app
 template (Polaris + App Bridge + Prisma) with a Theme App Extension for the storefront.
 
-> **Status:** First increment — app foundation + the **Sticky Add to Cart** widget
-> (the hero feature) built end to end. Widgets 2–5 (Free Shipping Bar, Cart Goal,
-> Trust Badges, Announcement Bar) are scaffolded in the data model and dashboard and
-> land in later increments. See [`docs/superpowers/specs`](docs/superpowers/specs).
+> **Status:** **v1.0 complete** — the app foundation plus all five conversion widgets
+> built end to end: **Sticky Add to Cart, Free Shipping Bar, Cart Goal, Trust Badges,
+> Announcement Bar**. Each has an admin settings screen (shared global settings + a live
+> preview), Postgres persistence, metafield sync, and a storefront implementation.
+> See [`docs/superpowers/specs`](docs/superpowers/specs).
 
 ## How it works (architecture)
 
@@ -36,22 +37,30 @@ Prisma → Postgres (source of truth)              ▲
 ```
 app/
   routes/
-    app._index.tsx               Dashboard (widget status + score placeholders)
-    app.widgets.sticky-cart.tsx  Sticky ATC settings (loader + action)
-  lib/widget-config.ts           Config contract: types, defaults, normalizer (+ tests)
-  models/widget.server.ts        Prisma access for widget settings
-  services/metafield-sync.server.ts   Prisma → Admin metafieldsSet
-  components/settings/           Reusable settings framework (Global panel, form, preview)
-extensions/searchaly-widgets/    Theme App Extension
-  blocks/app-embed.liquid        Reads metafield, injects config JSON
-  assets/core.js                 Shared runtime + widget registry
-  assets/sticky-cart.js          Sticky ATC behavior
-  assets/searchaly.css           Widget styles (CSS-var driven)
-prisma/schema.prisma             Postgres; Session + WidgetSettings
+    app._index.tsx                    Dashboard (widget status grid + score placeholders)
+    app.widgets.sticky-cart.tsx       ┐
+    app.widgets.free-shipping-bar.tsx │ one settings screen per widget
+    app.widgets.cart-goal.tsx         │ (loader/action via widget-route.server)
+    app.widgets.trust-badges.tsx      │
+    app.widgets.announcement-bar.tsx  ┘
+  lib/widget-config.ts                Config contract: types, defaults, normalizers (+ tests)
+  lib/widget-route.server.ts          Shared loader/action for every widget route
+  lib/trust-badges.ts                 Trust-badge catalog
+  models/widget.server.ts             Prisma access for widget settings
+  services/metafield-sync.server.ts   Prisma -> Admin metafieldsSet
+  components/settings/                Reusable framework: GlobalSettingsPanel,
+                                      WidgetSettingsForm, useWidgetSettingsForm, previews
+extensions/searchaly-widgets/         Theme App Extension
+  blocks/app-embed.liquid             Reads metafield, injects config JSON, loads assets
+  assets/core.js                      Shared runtime: config parse, gates, registry, cart cache
+  assets/<widget>.js                  One behavior file per widget (5 total)
+  assets/searchaly.css                Widget styles (CSS-var driven)
+prisma/schema.prisma                  Postgres; Session + WidgetSettings
 ```
 
 Adding a widget reuses the framework: a settings screen (shared global panel + a few
-fields) + one `assets/<widget>.js` that calls `Searchaly.register(...)`.
+fields via `useWidgetSettingsForm`) + one `assets/<widget>.js` that calls
+`Searchaly.register(...)` — no new data model or sync code.
 
 ## Local setup
 
@@ -98,5 +107,6 @@ store via `npm run dev`.
 
 ## Roadmap
 
-v1.0: Sticky Cart ✅ → Free Shipping Bar → Cart Goal → Trust Badges → Announcement Bar.
-v1.5 social proof · v2.0 revenue widgets · v3.0 AI + real Store Health / Conversion Score.
+v1.0 ✅ Sticky Cart · Free Shipping Bar · Cart Goal · Trust Badges · Announcement Bar.
+v1.5 social proof (Sales Pop, Stock/Visitor Counter) · v2.0 revenue widgets (bundles,
+quantity breaks, upsells) · v3.0 AI + real Store Health / Conversion Score.

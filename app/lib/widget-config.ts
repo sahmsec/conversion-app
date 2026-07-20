@@ -69,16 +69,83 @@ const DEFAULT_STICKY_ATC: StickyAtcConfig = {
   showAfterScroll: true,
 };
 
-/**
- * Widget-specific defaults keyed by type. Widgets 2-5 are placeholders for this
- * increment; their real shapes land with their own specs.
- */
+export type FreeShippingBarConfig = {
+  goalCents: number; // free-shipping threshold in the store's currency (cents)
+  messageBefore: string; // supports the {{remaining}} token
+  messageAfter: string;
+  showProgressBar: boolean;
+};
+
+const DEFAULT_FREE_SHIPPING_BAR: FreeShippingBarConfig = {
+  goalCents: 5000,
+  messageBefore: "Spend {{remaining}} more for FREE shipping!",
+  messageAfter: "🎉 You've unlocked FREE shipping!",
+  showProgressBar: true,
+};
+
+export type CartGoalConfig = {
+  goalCents: number;
+  reward: string;
+  messageBefore: string; // supports {{remaining}} and {{reward}}
+  messageAfter: string; // supports {{reward}}
+  showProgressBar: boolean;
+};
+
+const DEFAULT_CART_GOAL: CartGoalConfig = {
+  goalCents: 7500,
+  reward: "a free gift",
+  messageBefore: "You're {{remaining}} away from {{reward}}!",
+  messageAfter: "🎁 You've earned {{reward}}!",
+  showProgressBar: true,
+};
+
+export const TRUST_BADGE_KEYS = [
+  "visa",
+  "mastercard",
+  "amex",
+  "paypal",
+  "applepay",
+  "googlepay",
+  "ssl",
+  "moneyback",
+] as const;
+export type TrustBadgeKey = (typeof TRUST_BADGE_KEYS)[number];
+
+export type TrustBadgesConfig = {
+  heading: string;
+  badges: TrustBadgeKey[];
+  alignment: "left" | "center" | "right";
+};
+
+const DEFAULT_TRUST_BADGES: TrustBadgesConfig = {
+  heading: "Guaranteed safe & secure checkout",
+  badges: ["visa", "mastercard", "amex", "paypal", "applepay"],
+  alignment: "center",
+};
+
+export type AnnouncementBarConfig = {
+  messages: string[];
+  rotateMs: number;
+  link: string;
+  dismissible: boolean;
+  countdownTo: string | null; // ISO date; optional countdown
+};
+
+const DEFAULT_ANNOUNCEMENT_BAR: AnnouncementBarConfig = {
+  messages: ["Welcome to our store!"],
+  rotateMs: 4000,
+  link: "",
+  dismissible: false,
+  countdownTo: null,
+};
+
+/** Widget-specific defaults keyed by type. */
 export const DEFAULT_WIDGET: Record<WidgetType, Record<string, unknown>> = {
   STICKY_ATC: { ...DEFAULT_STICKY_ATC },
-  ANNOUNCEMENT_BAR: {},
-  FREE_SHIPPING_BAR: {},
-  TRUST_BADGES: {},
-  CART_GOAL: {},
+  ANNOUNCEMENT_BAR: { ...DEFAULT_ANNOUNCEMENT_BAR },
+  FREE_SHIPPING_BAR: { ...DEFAULT_FREE_SHIPPING_BAR },
+  TRUST_BADGES: { ...DEFAULT_TRUST_BADGES },
+  CART_GOAL: { ...DEFAULT_CART_GOAL },
 };
 
 export type WidgetConfig = {
@@ -165,6 +232,15 @@ export function normalizeGlobal(raw: unknown): GlobalWidgetSettings {
   };
 }
 
+/** Normalize an array of non-empty strings; returns a copy of `d` if none valid. */
+function strArray(v: unknown, d: string[]): string[] {
+  if (!Array.isArray(v)) return d.slice();
+  const out = v.filter(
+    (x): x is string => typeof x === "string" && x.trim().length > 0,
+  );
+  return out.length > 0 ? out : d.slice();
+}
+
 function normalizeStickyAtc(raw: unknown): StickyAtcConfig {
   const r = obj(raw);
   return {
@@ -175,8 +251,63 @@ function normalizeStickyAtc(raw: unknown): StickyAtcConfig {
   };
 }
 
+function normalizeFreeShippingBar(raw: unknown): FreeShippingBarConfig {
+  const r = obj(raw);
+  return {
+    goalCents: clampInt(r.goalCents, 0, 100000000, DEFAULT_FREE_SHIPPING_BAR.goalCents),
+    messageBefore: str(r.messageBefore, DEFAULT_FREE_SHIPPING_BAR.messageBefore),
+    messageAfter: str(r.messageAfter, DEFAULT_FREE_SHIPPING_BAR.messageAfter),
+    showProgressBar: bool(r.showProgressBar, DEFAULT_FREE_SHIPPING_BAR.showProgressBar),
+  };
+}
+
+function normalizeCartGoal(raw: unknown): CartGoalConfig {
+  const r = obj(raw);
+  return {
+    goalCents: clampInt(r.goalCents, 0, 100000000, DEFAULT_CART_GOAL.goalCents),
+    reward: str(r.reward, DEFAULT_CART_GOAL.reward),
+    messageBefore: str(r.messageBefore, DEFAULT_CART_GOAL.messageBefore),
+    messageAfter: str(r.messageAfter, DEFAULT_CART_GOAL.messageAfter),
+    showProgressBar: bool(r.showProgressBar, DEFAULT_CART_GOAL.showProgressBar),
+  };
+}
+
+function normalizeTrustBadges(raw: unknown): TrustBadgesConfig {
+  const r = obj(raw);
+  const badges = strArray(r.badges, DEFAULT_TRUST_BADGES.badges).filter(
+    (b): b is TrustBadgeKey => (TRUST_BADGE_KEYS as readonly string[]).includes(b),
+  );
+  return {
+    heading: str(r.heading, DEFAULT_TRUST_BADGES.heading),
+    badges: badges.length > 0 ? badges : DEFAULT_TRUST_BADGES.badges.slice(),
+    alignment: oneOf(
+      r.alignment,
+      ["left", "center", "right"] as const,
+      DEFAULT_TRUST_BADGES.alignment,
+    ),
+  };
+}
+
+function normalizeAnnouncementBar(raw: unknown): AnnouncementBarConfig {
+  const r = obj(raw);
+  return {
+    messages: strArray(r.messages, DEFAULT_ANNOUNCEMENT_BAR.messages),
+    rotateMs: clampInt(r.rotateMs, 1000, 60000, DEFAULT_ANNOUNCEMENT_BAR.rotateMs),
+    link: typeof r.link === "string" ? r.link : DEFAULT_ANNOUNCEMENT_BAR.link,
+    dismissible: bool(r.dismissible, DEFAULT_ANNOUNCEMENT_BAR.dismissible),
+    countdownTo:
+      typeof r.countdownTo === "string" && r.countdownTo.length > 0
+        ? r.countdownTo
+        : null,
+  };
+}
+
 const WIDGET_NORMALIZERS: Partial<Record<WidgetType, (raw: unknown) => Record<string, unknown>>> = {
   STICKY_ATC: normalizeStickyAtc,
+  FREE_SHIPPING_BAR: normalizeFreeShippingBar,
+  CART_GOAL: normalizeCartGoal,
+  TRUST_BADGES: normalizeTrustBadges,
+  ANNOUNCEMENT_BAR: normalizeAnnouncementBar,
 };
 
 /** Normalize a stored/submitted config for a widget type into a valid `{ global, widget }`. */

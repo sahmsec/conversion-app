@@ -13,6 +13,10 @@
   {%- comment -%} `defer` scripts execute in document order: core.js registers the runtime first. {%- endcomment -%}
   <script src="{{ 'core.js' | asset_url }}" defer></script>
   <script src="{{ 'sticky-cart.js' | asset_url }}" defer></script>
+  <script src="{{ 'free-shipping-bar.js' | asset_url }}" defer></script>
+  <script src="{{ 'cart-goal.js' | asset_url }}" defer></script>
+  <script src="{{ 'trust-badges.js' | asset_url }}" defer></script>
+  <script src="{{ 'announcement-bar.js' | asset_url }}" defer></script>
 {%- endif -%}
 
 {% schema %}

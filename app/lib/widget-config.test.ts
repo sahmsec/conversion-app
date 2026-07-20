@@ -101,4 +101,63 @@ describe("buildStorefrontConfig", () => {
     ]);
     expect(payload.widgets).toEqual({});
   });
+
+  it("keys enabled widgets by their storefront key", () => {
+    const payload = buildStorefrontConfig([
+      { type: "FREE_SHIPPING_BAR", enabled: true, config: {} },
+      { type: "ANNOUNCEMENT_BAR", enabled: true, config: {} },
+    ]);
+    expect(Object.keys(payload.widgets).sort()).toEqual([
+      "announcement-bar",
+      "free-shipping-bar",
+    ]);
+  });
+});
+
+describe("normalizeConfig — Free Shipping Bar & Cart Goal", () => {
+  it("clamps a negative goal to 0 and preserves tokens", () => {
+    const c = normalizeConfig("FREE_SHIPPING_BAR", {
+      widget: { goalCents: -50, messageBefore: "Add {{remaining}}!" },
+    });
+    expect(c.widget.goalCents).toBe(0);
+    expect(c.widget.messageBefore).toBe("Add {{remaining}}!");
+    expect(c.widget.showProgressBar).toBe(true);
+  });
+
+  it("Cart Goal fills reward + message defaults", () => {
+    const c = normalizeConfig("CART_GOAL", {});
+    expect(c.widget.reward).toBe("a free gift");
+    expect(typeof c.widget.messageBefore).toBe("string");
+  });
+});
+
+describe("normalizeConfig — Trust Badges", () => {
+  it("drops unknown badge keys and invalid alignment", () => {
+    const c = normalizeConfig("TRUST_BADGES", {
+      widget: { badges: ["visa", "bogus", "ssl"], alignment: "diagonal" },
+    });
+    expect(c.widget.badges).toEqual(["visa", "ssl"]);
+    expect(c.widget.alignment).toBe("center");
+  });
+
+  it("falls back to default badges when none are valid", () => {
+    const c = normalizeConfig("TRUST_BADGES", { widget: { badges: ["nope"] } });
+    expect((c.widget.badges as string[]).length).toBeGreaterThan(0);
+  });
+});
+
+describe("normalizeConfig — Announcement Bar", () => {
+  it("filters empty messages, clamps rotation, nulls empty countdown", () => {
+    const c = normalizeConfig("ANNOUNCEMENT_BAR", {
+      widget: { messages: ["A", "", "   ", "B"], rotateMs: 10, countdownTo: "" },
+    });
+    expect(c.widget.messages).toEqual(["A", "B"]);
+    expect(c.widget.rotateMs).toBe(1000);
+    expect(c.widget.countdownTo).toBeNull();
+  });
+
+  it("falls back to a default message when list is empty", () => {
+    const c = normalizeConfig("ANNOUNCEMENT_BAR", { widget: { messages: [] } });
+    expect((c.widget.messages as string[]).length).toBe(1);
+  });
 });

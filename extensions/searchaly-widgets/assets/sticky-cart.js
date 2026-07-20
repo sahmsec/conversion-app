@@ -89,7 +89,14 @@
 
     // --- Data --------------------------------------------------------------
     function currentVariantId() {
-      if (idInput && idInput.value) return idInput.value;
+      // Radio-group variant pickers: use the checked option, not the first radio.
+      var checked = form.querySelector('[name="id"]:checked');
+      if (checked && checked.value) return checked.value;
+      // <select name="id"> or a JS-updated hidden <input name="id"> (e.g. Dawn).
+      if (idInput && idInput.type !== "radio" && idInput.value) return idInput.value;
+      // URL ?variant= fallback.
+      var m = window.location.search.match(/[?&]variant=(\d+)/);
+      if (m) return m[1];
       if (product && product.variants && product.variants[0]) {
         return String(product.variants[0].id);
       }
@@ -136,12 +143,23 @@
     form.addEventListener("change", renderVariant);
 
     // --- Actions -----------------------------------------------------------
-    function addToCart(redirectTo) {
+    var submitting = false;
+    function addToCart(redirectTo, sourceBtn) {
+      if (submitting) return; // guard against double-submit (both buttons share this)
       var id = currentVariantId();
       if (!id) return;
+      submitting = true;
+      var btn = sourceBtn || cta;
+      var original = btn.textContent;
       cta.disabled = true;
-      var original = cta.textContent;
-      cta.textContent = "Adding…";
+      if (buyNow) buyNow.disabled = true;
+      btn.textContent = "Adding…";
+      var reset = function () {
+        submitting = false;
+        cta.disabled = false;
+        if (buyNow) buyNow.disabled = false;
+        btn.textContent = original;
+      };
       fetch("/cart/add.js", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -154,24 +172,20 @@
         })
         .then(function (res) {
           if (!res.ok) {
-            cta.disabled = false;
-            cta.textContent = original;
+            reset();
             return;
           }
           window.location.href = redirectTo;
         })
-        .catch(function () {
-          cta.disabled = false;
-          cta.textContent = original;
-        });
+        .catch(reset);
     }
 
     cta.addEventListener("click", function () {
-      addToCart("/cart");
+      addToCart("/cart", cta);
     });
     if (buyNow) {
       buyNow.addEventListener("click", function () {
-        addToCart("/checkout");
+        addToCart("/checkout", buyNow);
       });
     }
 

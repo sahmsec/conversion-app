@@ -25,6 +25,10 @@ export default function App() {
           Dashboard
         </Link>
         <Link to="/app/widgets/sticky-cart">Sticky Add to Cart</Link>
+        <Link to="/app/widgets/free-shipping-bar">Free Shipping Bar</Link>
+        <Link to="/app/widgets/cart-goal">Cart Goal</Link>
+        <Link to="/app/widgets/trust-badges">Trust Badges</Link>
+        <Link to="/app/widgets/announcement-bar">Announcement Bar</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>

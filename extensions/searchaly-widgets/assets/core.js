@@ -92,6 +92,55 @@
     node.setAttribute("data-position", global.position || "bottom");
   }
 
+  // Shared, cached cart fetch — spend-goal widgets reuse one request.
+  var cartPromise = null;
+  function getCart() {
+    if (!cartPromise) {
+      cartPromise = fetch("/cart.js", { headers: { Accept: "application/json" } })
+        .then(function (r) {
+          return r.ok ? r.json() : null;
+        })
+        .catch(function () {
+          return null;
+        });
+    }
+    return cartPromise;
+  }
+
+  // Detect cart mutations (add/change/update/clear) so live widgets can re-render.
+  // Patch fetch once; on a cart mutation, invalidate the cache and broadcast.
+  if (window.fetch && !window.__searchalyFetchPatched) {
+    window.__searchalyFetchPatched = true;
+    var _origFetch = window.fetch;
+    window.fetch = function (input) {
+      var url = typeof input === "string" ? input : (input && input.url) || "";
+      var isCartMutation = /\/cart\/(add|change|update|clear)(\.js)?/i.test(url);
+      return _origFetch.apply(this, arguments).then(function (res) {
+        if (isCartMutation) {
+          cartPromise = null;
+          try {
+            document.dispatchEvent(new CustomEvent("searchaly:cart-updated"));
+          } catch (e) {
+            /* CustomEvent unsupported */
+          }
+        }
+        return res;
+      });
+    };
+  }
+
+  /** Replace {{token}} placeholders in a template string. */
+  function fill(template, tokens) {
+    return String(template == null ? "" : template).replace(
+      /\{\{\s*(\w+)\s*\}\}/g,
+      function (match, key) {
+        return Object.prototype.hasOwnProperty.call(tokens, key)
+          ? tokens[key]
+          : match;
+      },
+    );
+  }
+
   var registry = {};
 
   var Searchaly = {
@@ -99,6 +148,8 @@
     allowed: allowed,
     money: money,
     applyTheme: applyTheme,
+    getCart: getCart,
+    fill: fill,
     register: function (key, initFn) {
       registry[key] = initFn;
       var cfg = widgets[key];
