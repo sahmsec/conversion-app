@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+/// One settings row per widget per shop. `enabled`, `type`, and `shop` are columns
+/// (queried by the dashboard + storefront sync); all visual/behavioral config lives
+/// in the `config` JSON so new widgets never require a schema migration.
+model WidgetSettings {
+  id        String     @id @default(cuid())
+  shop      String
+  type      WidgetType
+  enabled   Boolean    @default(false)
+  config    Json
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([shop, type])
+  @@index([shop])
+}
+
+enum WidgetType {
+  STICKY_ATC
+  ANNOUNCEMENT_BAR
+  FREE_SHIPPING_BAR
+  TRUST_BADGES
+  CART_GOAL
+}

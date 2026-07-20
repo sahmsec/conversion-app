@@ -1,0 +1,24 @@
+{%- comment -%}
+  Searchaly Boost — app embed. Reads the app-owned shop metafield written by the
+  admin app and injects it as JSON for the storefront runtime. Zero backend calls.
+  A `json`-typed metafield deserializes to an object in Liquid, so `| json`
+  re-serializes it back to valid JSON for the <script> tag.
+{%- endcomment -%}
+{%- liquid
+  assign searchaly_config = shop.metafields["$app:searchaly"].config.value
+-%}
+{%- if searchaly_config -%}
+  <script type="application/json" id="searchaly-config">{{ searchaly_config | json }}</script>
+  <link rel="stylesheet" href="{{ 'searchaly.css' | asset_url }}">
+  {%- comment -%} `defer` scripts execute in document order: core.js registers the runtime first. {%- endcomment -%}
+  <script src="{{ 'core.js' | asset_url }}" defer></script>
+  <script src="{{ 'sticky-cart.js' | asset_url }}" defer></script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Searchaly Boost",
+  "target": "body",
+  "settings": []
+}
+{% endschema %}

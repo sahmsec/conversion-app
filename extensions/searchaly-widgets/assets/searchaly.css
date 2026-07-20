@@ -1,0 +1,146 @@
+/* Searchaly Boost — storefront widget styles. All theming via CSS custom
+   properties set by core.js applyTheme(); hidden/visible driven by .is-visible. */
+
+.searchaly-sticky {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  box-sizing: border-box;
+  background: var(--sa-bg, #111827);
+  color: var(--sa-text, #ffffff);
+  font-size: var(--sa-font-size, 16px);
+  font-weight: var(--sa-font-weight, 600);
+  font-family: inherit;
+  transition-property: opacity, transform, visibility;
+  transition-duration: var(--sa-anim, 200ms);
+  transition-timing-function: ease;
+}
+
+.searchaly-sticky[data-position="bottom"] {
+  bottom: 0;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.18);
+}
+.searchaly-sticky[data-position="top"] {
+  top: 0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+}
+
+/* Hidden states by animation type */
+.searchaly-sticky[data-animation="fade"],
+.searchaly-sticky[data-animation="none"] {
+  opacity: 0;
+  visibility: hidden;
+}
+.searchaly-sticky[data-animation="fade"].is-visible,
+.searchaly-sticky[data-animation="none"].is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+.searchaly-sticky[data-animation="none"] {
+  transition: none;
+}
+.searchaly-sticky[data-animation="slide"][data-position="bottom"] {
+  transform: translateY(110%);
+}
+.searchaly-sticky[data-animation="slide"][data-position="top"] {
+  transform: translateY(-110%);
+}
+.searchaly-sticky[data-animation="slide"].is-visible {
+  transform: translateY(0);
+}
+
+.searchaly-sticky__info {
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.2;
+}
+.searchaly-sticky__title {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.searchaly-sticky__price {
+  display: block;
+  font-weight: 400;
+  opacity: 0.85;
+  font-size: 0.8em;
+}
+
+.searchaly-sticky__qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+.searchaly-sticky__qty button {
+  background: transparent;
+  color: inherit;
+  border: none;
+  padding: 6px 10px;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+.searchaly-sticky__qty input {
+  width: 40px;
+  text-align: center;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.searchaly-sticky__qty input::-webkit-outer-spin-button,
+.searchaly-sticky__qty input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.searchaly-sticky__cta {
+  background: var(--sa-accent, #4f46e5);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.searchaly-sticky__cta[disabled] {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.searchaly-sticky__buynow {
+  background: transparent;
+  color: inherit;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 749px) {
+  .searchaly-sticky {
+    gap: 8px;
+    padding: 8px 12px;
+  }
+  .searchaly-sticky__title {
+    font-size: 0.9em;
+  }
+}
