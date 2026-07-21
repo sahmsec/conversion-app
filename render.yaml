@@ -6,7 +6,7 @@
 # the merchant admin has an occasional cold start.
 services:
   - type: web
-    name: searchaly-boost
+    name: conversion-app
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: free
