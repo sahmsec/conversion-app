@@ -1,0 +1,27 @@
+# Render Blueprint — deploys the Searchaly Boost backend from this repo.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# The storefront widgets read their config from a Shopify metafield and make no
+# calls to this backend, so a sleeping free instance never affects shoppers — only
+# the merchant admin has an occasional cold start.
+services:
+  - type: web
+    name: searchaly-boost
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: singapore # matches the Neon ap-southeast-1 database for low latency
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Secrets — set these in the Render dashboard (Environment tab):
+      - key: DATABASE_URL # your Neon connection string (same as local .env)
+        sync: false
+      - key: SHOPIFY_API_KEY # from `shopify app env show` after registering
+        sync: false
+      - key: SHOPIFY_API_SECRET # from `shopify app env show`
+        sync: false
+      # The app's public URL == this service's Render URL. After the first deploy,
+      # set this to https://<your-service>.onrender.com and redeploy.
+      - key: SHOPIFY_APP_URL
+        sync: false
