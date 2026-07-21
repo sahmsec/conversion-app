@@ -68,7 +68,7 @@ export default function Dashboard() {
 
   return (
     <Page>
-      <TitleBar title="Searchaly Boost" />
+      <TitleBar title="Conversion App" />
       <BlockStack gap="500">
         {/* Scores (placeholders until v3.0 analytics) */}
         <InlineGrid columns={{ xs: 1, sm: 2 }} gap="400">
