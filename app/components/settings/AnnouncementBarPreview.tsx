@@ -17,10 +17,11 @@ export function AnnouncementBarPreview({
     <div
       style={{
         display: "flex",
+        flexWrap: "wrap",
         alignItems: "center",
         justifyContent: "center",
-        gap: 8,
-        padding: "8px 28px 8px 12px",
+        gap: 6,
+        padding: "8px 28px",
         position: "relative",
         background: global.colors.bg,
         color: global.colors.text,
@@ -29,10 +30,12 @@ export function AnnouncementBarPreview({
         textAlign: "center",
       }}
     >
-      <span>{first}</span>
-      {config.countdownTo && <span style={{ opacity: 0.85 }}>· 02:14:33:10</span>}
+      <span style={{ wordBreak: "break-word" }}>{first}</span>
+      {config.countdownTo && (
+        <span style={{ opacity: 0.85, whiteSpace: "nowrap" }}>· 02:14:33:10</span>
+      )}
       {config.dismissible && (
-        <span style={{ position: "absolute", right: 10, opacity: 0.7 }}>×</span>
+        <span style={{ position: "absolute", right: 10, top: 8, opacity: 0.7 }}>×</span>
       )}
     </div>
   );
