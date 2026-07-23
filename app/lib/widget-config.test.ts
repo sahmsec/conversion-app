@@ -54,12 +54,18 @@ describe("normalizeGlobal", () => {
 });
 
 describe("normalizeGlobal — targeting", () => {
-  it("defaults to all pages with empty handle lists", () => {
+  it("defaults to all pages with empty handle + country lists", () => {
     expect(normalizeGlobal({}).targeting).toEqual({
       pages: "all",
       productHandles: [],
       collectionHandles: [],
+      countries: [],
     });
+  });
+
+  it("uppercases and filters country codes", () => {
+    const g = normalizeGlobal({ targeting: { countries: ["us", " ca ", "", 5] } });
+    expect(g.targeting.countries).toEqual(["US", "CA"]);
   });
 
   it("keeps a valid page scope and trims/filters handles", () => {

@@ -116,11 +116,22 @@
     return true;
   }
 
+  function geoAllowed(t) {
+    if (!t || !isArr(t.countries) || t.countries.length === 0) return true;
+    var country = null;
+    try {
+      country = window.Shopify && window.Shopify.country;
+    } catch (e) {
+      country = null;
+    }
+    if (!country) return true; // can't determine the country -> don't hide
+    return t.countries.indexOf(String(country).toUpperCase()) !== -1;
+  }
+
   function allowed(global) {
+    var t = global && global.targeting;
     return (
-      deviceAllowed(global) &&
-      scheduleAllowed(global) &&
-      pageAllowed(global && global.targeting)
+      deviceAllowed(global) && scheduleAllowed(global) && pageAllowed(t) && geoAllowed(t)
     );
   }
 

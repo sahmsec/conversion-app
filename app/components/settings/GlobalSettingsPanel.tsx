@@ -104,6 +104,15 @@ export function GlobalSettingsPanel({
             multiline={2}
           />
         )}
+        <TextField
+          label="Countries (optional)"
+          value={value.targeting.countries.join(", ")}
+          onChange={(v) =>
+            patch({ targeting: { ...value.targeting, countries: v.split(/[\s,]+/) } })
+          }
+          helpText="2-letter country codes (e.g. US, CA, GB), comma-separated. Leave blank to show in all countries."
+          autoComplete="off"
+        />
       </BlockStack>
 
       <Divider />

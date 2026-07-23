@@ -38,12 +38,14 @@ export type Targeting = {
   pages: "all" | "home" | "product" | "collection" | "cart";
   productHandles: string[]; // when on product pages, limit to these (empty = all)
   collectionHandles: string[]; // when on collection pages, limit to these (empty = all)
+  countries: string[]; // ISO country codes; empty = all countries
 };
 
 export const DEFAULT_TARGETING: Targeting = {
   pages: "all",
   productHandles: [],
   collectionHandles: [],
+  countries: [],
 };
 
 export type GlobalWidgetSettings = {
@@ -63,7 +65,7 @@ export const DEFAULT_GLOBAL: GlobalWidgetSettings = {
   animation: { type: "fade", speedMs: 200 },
   position: "bottom",
   schedule: null,
-  targeting: { pages: "all", productHandles: [], collectionHandles: [] },
+  targeting: { pages: "all", productHandles: [], collectionHandles: [], countries: [] },
 };
 
 // ---------------------------------------------------------------------------
@@ -258,6 +260,7 @@ function normalizeTargeting(raw: unknown): Targeting {
     ),
     productHandles: handleArray(r.productHandles),
     collectionHandles: handleArray(r.collectionHandles),
+    countries: handleArray(r.countries).map((c) => c.toUpperCase()),
   };
 }
 
