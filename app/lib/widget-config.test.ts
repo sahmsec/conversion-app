@@ -53,6 +53,36 @@ describe("normalizeGlobal", () => {
   });
 });
 
+describe("normalizeGlobal — style / dismiss / custom CSS", () => {
+  it("defaults style to a full-width bar and no dismiss/CSS", () => {
+    const g = normalizeGlobal({});
+    expect(g.style).toEqual(DEFAULT_GLOBAL.style);
+    expect(g.dismissible).toBe(false);
+    expect(g.customCss).toBe("");
+  });
+
+  it("accepts a valid form factor and clamps radius/maxWidth", () => {
+    const g = normalizeGlobal({
+      style: { formFactor: "pill", radius: 999, maxWidth: -10, icon: "🚚" },
+      dismissible: true,
+    });
+    expect(g.style.formFactor).toBe("pill");
+    expect(g.style.radius).toBe(40); // clamped to max
+    expect(g.style.maxWidth).toBe(0); // clamped to min
+    expect(g.style.icon).toBe("🚚");
+    expect(g.dismissible).toBe(true);
+  });
+
+  it("rejects an unknown form factor and truncates long custom CSS", () => {
+    const g = normalizeGlobal({
+      style: { formFactor: "hexagon" },
+      customCss: "a".repeat(6000),
+    });
+    expect(g.style.formFactor).toBe("bar");
+    expect(g.customCss.length).toBe(5000);
+  });
+});
+
 describe("normalizeGlobal — targeting", () => {
   it("defaults to all pages with empty handle + country lists", () => {
     expect(normalizeGlobal({}).targeting).toEqual({

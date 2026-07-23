@@ -27,12 +27,14 @@
       return m && String(m).trim().length > 0;
     });
     if (!messages.length) return;
+    // Dismiss can be enabled per-widget (cfg.dismissible) or via the global toggle.
+    var dismissible = !!(cfg.dismissible || global.dismissible);
 
     var DISMISS_KEY =
       "searchaly-announcement-dismissed-" +
       hashStr(JSON.stringify({ m: messages, c: cfg.countdownTo || "", l: cfg.link || "" }));
     try {
-      if (cfg.dismissible && sessionStorage.getItem(DISMISS_KEY) === "1") return;
+      if (dismissible && sessionStorage.getItem(DISMISS_KEY) === "1") return;
     } catch (e) {
       /* sessionStorage unavailable */
     }
@@ -91,7 +93,7 @@
       }, Math.max(1000, Number(cfg.rotateMs) || 4000));
     }
 
-    if (cfg.dismissible) {
+    if (dismissible) {
       var close = document.createElement("button");
       close.className = "searchaly-bar__close";
       close.type = "button";

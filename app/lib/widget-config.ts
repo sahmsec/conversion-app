@@ -52,12 +52,30 @@ export const DEFAULT_TARGETING: Targeting = {
   countries: [],
 };
 
+/** Form-factor + shape controls shared by the bar-style widgets. */
+export type WidgetStyle = {
+  formFactor: "bar" | "pill" | "boxed"; // full-width edge bar · floating rounded pill · centered card
+  radius: number; // corner radius (px) for pill/boxed
+  maxWidth: number; // max width (px) for pill/boxed; 0 = full width
+  icon: string; // optional leading emoji/icon (e.g. "🚚")
+};
+
+export const DEFAULT_STYLE: WidgetStyle = {
+  formFactor: "bar",
+  radius: 10,
+  maxWidth: 640,
+  icon: "",
+};
+
 export type GlobalWidgetSettings = {
   devices: { desktop: boolean; mobile: boolean };
   colors: { bg: string; text: string; accent: string };
   typography: { fontSize: number; fontWeight: number };
   animation: { type: "none" | "fade" | "slide"; speedMs: number };
   position: "top" | "bottom";
+  style: WidgetStyle;
+  dismissible: boolean; // show a ✕ so shoppers can close the widget (remembered per session)
+  customCss: string; // raw CSS injected for this widget (merchant's own store)
   schedule: { start?: string; end?: string; days: number[] } | null;
   targeting: Targeting;
 };
@@ -68,6 +86,9 @@ export const DEFAULT_GLOBAL: GlobalWidgetSettings = {
   typography: { fontSize: 16, fontWeight: 600 },
   animation: { type: "fade", speedMs: 200 },
   position: "bottom",
+  style: { ...DEFAULT_STYLE },
+  dismissible: false,
+  customCss: "",
   schedule: null,
   targeting: { pages: "all", productHandles: [], collectionHandles: [], countries: [] },
 };
@@ -289,8 +310,21 @@ export function normalizeGlobal(raw: unknown): GlobalWidgetSettings {
       speedMs: clampInt(animation.speedMs, 0, 2000, DEFAULT_GLOBAL.animation.speedMs),
     },
     position: oneOf(r.position, ["top", "bottom"] as const, DEFAULT_GLOBAL.position),
+    style: normalizeStyle(r.style),
+    dismissible: bool(r.dismissible, DEFAULT_GLOBAL.dismissible),
+    customCss: typeof r.customCss === "string" ? r.customCss.slice(0, 5000) : DEFAULT_GLOBAL.customCss,
     schedule,
     targeting: normalizeTargeting(r.targeting),
+  };
+}
+
+function normalizeStyle(raw: unknown): WidgetStyle {
+  const r = obj(raw);
+  return {
+    formFactor: oneOf(r.formFactor, ["bar", "pill", "boxed"] as const, DEFAULT_STYLE.formFactor),
+    radius: clampInt(r.radius, 0, 40, DEFAULT_STYLE.radius),
+    maxWidth: clampInt(r.maxWidth, 0, 2000, DEFAULT_STYLE.maxWidth),
+    icon: typeof r.icon === "string" ? r.icon.slice(0, 8) : DEFAULT_STYLE.icon,
   };
 }
 

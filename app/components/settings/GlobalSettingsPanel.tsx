@@ -10,7 +10,11 @@ import {
   Text,
   TextField,
 } from "@shopify/polaris";
-import type { GlobalWidgetSettings, Targeting } from "../../lib/widget-config";
+import type {
+  GlobalWidgetSettings,
+  Targeting,
+  WidgetStyle,
+} from "../../lib/widget-config";
 
 /**
  * The shared "Global Settings For Every Widget" panel (PRD). Fully controlled:
@@ -56,6 +60,12 @@ export function GlobalSettingsPanel({
           ]}
           value={value.position}
           onChange={(v) => patch({ position: v as GlobalWidgetSettings["position"] })}
+        />
+        <Checkbox
+          label="Let shoppers dismiss (✕)"
+          checked={value.dismissible}
+          onChange={(v) => patch({ dismissible: v })}
+          helpText="Adds a close button; stays closed for the rest of the visit."
         />
       </BlockStack>
 
@@ -143,6 +153,59 @@ export function GlobalSettingsPanel({
 
       <Divider />
 
+      {/* Shape & style */}
+      <BlockStack gap="200">
+        <Text as="h3" variant="headingSm">
+          Shape &amp; style
+        </Text>
+        <Select
+          label="Form factor"
+          options={[
+            { label: "Full-width bar", value: "bar" },
+            { label: "Floating pill", value: "pill" },
+            { label: "Boxed card", value: "boxed" },
+          ]}
+          value={value.style.formFactor}
+          onChange={(v) =>
+            patch({ style: { ...value.style, formFactor: v as WidgetStyle["formFactor"] } })
+          }
+          helpText="Full-width spans the screen edge; pill and boxed float as a centered, rounded shape."
+        />
+        {value.style.formFactor !== "bar" && (
+          <InlineGrid columns={{ xs: 1, sm: 2 }} gap="300">
+            <RangeSlider
+              label={`Corner radius: ${value.style.radius}px`}
+              min={0}
+              max={40}
+              value={value.style.radius}
+              onChange={(v) => patch({ style: { ...value.style, radius: Number(v) } })}
+              output
+            />
+            <TextField
+              label="Max width (px)"
+              type="number"
+              min={0}
+              value={String(value.style.maxWidth)}
+              onChange={(v) =>
+                patch({ style: { ...value.style, maxWidth: Math.max(0, parseInt(v, 10) || 0) } })
+              }
+              autoComplete="off"
+              helpText="0 = auto"
+            />
+          </InlineGrid>
+        )}
+        <TextField
+          label="Leading icon (optional)"
+          value={value.style.icon}
+          onChange={(v) => patch({ style: { ...value.style, icon: v } })}
+          helpText="An emoji shown before the text, e.g. 🚚 or 🔥."
+          autoComplete="off"
+          maxLength={8}
+        />
+      </BlockStack>
+
+      <Divider />
+
       {/* Typography */}
       <BlockStack gap="200">
         <Text as="h3" variant="headingSm">
@@ -209,6 +272,26 @@ export function GlobalSettingsPanel({
             patch({ animation: { ...value.animation, speedMs: Number(v) } })
           }
           output
+        />
+      </BlockStack>
+
+      <Divider />
+
+      {/* Custom CSS */}
+      <BlockStack gap="200">
+        <Text as="h3" variant="headingSm">
+          Custom CSS
+        </Text>
+        <TextField
+          label="Custom CSS"
+          labelHidden
+          value={value.customCss}
+          onChange={(v) => patch({ customCss: v })}
+          multiline={4}
+          autoComplete="off"
+          monospaced
+          placeholder=".searchaly-bar { letter-spacing: 0.02em; }"
+          helpText="Advanced — CSS applied to this widget on your storefront. Target .searchaly-bar, .searchaly-pop, .searchaly-sticky, etc."
         />
       </BlockStack>
 

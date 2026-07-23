@@ -250,9 +250,12 @@
     for (var i = 0; i < placed.length; i++) {
       var node = placed[i];
       var edge = edgeOf(node);
-      node.style[edge] = offsets[edge] + "px";
+      // Floating forms (pill/boxed) sit slightly off the edge and stack with a gap.
+      var form = node.getAttribute("data-form");
+      var gap = form && form !== "bar" ? 14 : 0;
+      node.style[edge] = offsets[edge] + gap + "px";
       if (node.classList.contains("is-visible")) {
-        offsets[edge] += node.offsetHeight;
+        offsets[edge] += node.offsetHeight + gap;
       }
     }
   }
@@ -269,6 +272,7 @@
     var c = global.colors || {};
     var t = global.typography || {};
     var a = global.animation || {};
+    var s = global.style || {};
     if (c.bg) node.style.setProperty("--sa-bg", c.bg);
     if (c.text) node.style.setProperty("--sa-text", c.text);
     if (c.accent) node.style.setProperty("--sa-accent", c.accent);
@@ -277,6 +281,61 @@
     node.style.setProperty("--sa-anim", (a.speedMs != null ? a.speedMs : 200) + "ms");
     node.setAttribute("data-animation", a.type || "fade");
     node.setAttribute("data-position", global.position || "bottom");
+    // Shape / form factor
+    var form = s.formFactor === "pill" || s.formFactor === "boxed" ? s.formFactor : "bar";
+    node.setAttribute("data-form", form);
+    node.style.setProperty("--sa-radius", (s.radius != null ? s.radius : 10) + "px");
+    if (form !== "bar" && s.maxWidth) {
+      node.style.setProperty("--sa-max-width", s.maxWidth + "px");
+    }
+    if (s.icon) {
+      node.style.setProperty("--sa-icon", '"' + String(s.icon).replace(/"/g, "") + ' "');
+      node.setAttribute("data-has-icon", "1");
+    }
+  }
+
+  // Inject a widget's merchant-authored custom CSS once (their own store; CSS only).
+  function injectCss(key, css) {
+    if (!css) return;
+    var id = "searchaly-css-" + key;
+    if (document.getElementById(id)) return;
+    var style = document.createElement("style");
+    style.id = id;
+    style.textContent = String(css);
+    document.head.appendChild(style);
+  }
+
+  // Add a ✕ close control to a widget node; remembers dismissal for the session.
+  function dismissKey(key) {
+    return "searchaly-dismissed-" + key;
+  }
+  function isDismissed(key) {
+    try {
+      return sessionStorage.getItem(dismissKey(key)) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+  function addDismiss(node, key) {
+    node.classList.add("searchaly-has-dismiss");
+    var btn = document.createElement("button");
+    btn.className = "searchaly-bar__close";
+    btn.type = "button";
+    btn.setAttribute("aria-label", "Dismiss");
+    btn.textContent = "×";
+    btn.addEventListener("click", function () {
+      node.classList.remove("is-visible");
+      try {
+        sessionStorage.setItem(dismissKey(key), "1");
+      } catch (e) {
+        /* ignore */
+      }
+      setTimeout(function () {
+        if (node.parentNode) node.parentNode.removeChild(node);
+        restack();
+      }, 320);
+    });
+    node.appendChild(btn);
   }
 
   function fill(template, tokens) {
@@ -338,11 +397,15 @@
     fill: fill,
     stack: stack,
     track: track,
+    injectCss: injectCss,
+    addDismiss: addDismiss,
+    isDismissed: isDismissed,
     register: function (key, initFn) {
       registry[key] = initFn;
       var cfg = widgets[key];
       if (!cfg) return;
       if (!allowed(cfg.global)) return;
+      if (cfg.global && cfg.global.customCss) injectCss(key, cfg.global.customCss);
       try {
         initFn(cfg);
         track(key, "impression");

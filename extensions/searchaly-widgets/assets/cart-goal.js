@@ -10,6 +10,7 @@
   window.Searchaly.register("cart-goal", function (cfg) {
     var S = window.Searchaly;
     var global = cfg.global || {};
+    if (global.dismissible && S.isDismissed("cart-goal")) return;
     var goal = S.toPresentment(Number(cfg.goalCents) || 0);
 
     var bar = document.createElement("div");
@@ -32,6 +33,7 @@
 
     document.body.appendChild(bar);
     S.stack(bar);
+    if (global.dismissible) S.addDismiss(bar, "cart-goal");
 
     var goalTracked = false;
     function render(cart) {

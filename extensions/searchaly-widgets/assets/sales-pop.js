@@ -26,6 +26,9 @@
     if (cfg.global && cfg.global.colors && cfg.global.colors.accent) {
       pop.style.setProperty("--sa-accent", cfg.global.colors.accent);
     }
+    if (cfg.global && cfg.global.style && cfg.global.style.radius != null) {
+      pop.style.borderRadius = cfg.global.style.radius + "px";
+    }
 
     var body = document.createElement("div");
     body.className = "searchaly-pop__body";

@@ -28,6 +28,7 @@
   window.Searchaly.register("countdown", function (cfg) {
     var S = window.Searchaly;
     var global = cfg.global || {};
+    if (global.dismissible && S.isDismissed("countdown")) return;
 
     var end;
     if (cfg.mode === "evergreen") {
@@ -58,6 +59,7 @@
     bar.appendChild(text);
     document.body.appendChild(bar);
     S.stack(bar);
+    if (global.dismissible) S.addDismiss(bar, "countdown");
     requestAnimationFrame(function () {
       bar.classList.add("is-visible");
     });

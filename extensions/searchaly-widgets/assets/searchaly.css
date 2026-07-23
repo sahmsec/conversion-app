@@ -254,6 +254,42 @@
   padding-right: 32px;
 }
 
+/* Form factor: floating pill / boxed card (vs default full-width bar).
+   Centered with margin auto (NOT transform) so the slide animation's transform
+   stays free. Lifted off the edge by core.js restack(). */
+.searchaly-bar[data-form="pill"],
+.searchaly-bar[data-form="boxed"] {
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: min(var(--sa-max-width, 640px), calc(100% - 24px));
+  border-radius: var(--sa-radius, 10px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+}
+.searchaly-bar[data-form="pill"] {
+  width: fit-content;
+  padding-left: 22px;
+  padding-right: 22px;
+}
+.searchaly-bar[data-form="pill"].searchaly-has-dismiss,
+.searchaly-bar[data-form="pill"].searchaly-bar--announcement {
+  padding-right: 40px;
+}
+.searchaly-bar[data-form="boxed"] {
+  width: 100%;
+}
+
+/* Optional leading icon/emoji, injected via a CSS var so widget JS is untouched. */
+.searchaly-bar[data-has-icon] .searchaly-bar__text::before {
+  content: var(--sa-icon, "");
+}
+
+/* Universal dismiss: keep text clear of the ✕. */
+.searchaly-bar.searchaly-has-dismiss {
+  padding-right: 34px;
+}
+
 /* ---------------------------------------------------------------------------
    Trust badges (inline, near the product buy button)
    --------------------------------------------------------------------------- */

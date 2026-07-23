@@ -10,6 +10,7 @@
   window.Searchaly.register("free-shipping-bar", function (cfg) {
     var S = window.Searchaly;
     var global = cfg.global || {};
+    if (global.dismissible && S.isDismissed("free-shipping-bar")) return;
     // goalCents is stored in the shop's primary currency; convert to presentment.
     var goal = S.toPresentment(Number(cfg.goalCents) || 0);
 
@@ -33,6 +34,7 @@
 
     document.body.appendChild(bar);
     S.stack(bar);
+    if (global.dismissible) S.addDismiss(bar, "free-shipping-bar");
 
     var goalTracked = false;
     function render(cart) {
