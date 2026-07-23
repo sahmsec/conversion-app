@@ -1,0 +1,50 @@
+{%- comment -%}
+  Trust Badges — app BLOCK (drag-and-drop). Unlike the floating embed, merchants add
+  this inside a product section (e.g. right below the Add-to-cart button) and choose
+  which badges to show in the theme editor. Renders inline, no JS required.
+{%- endcomment -%}
+<div class="searchaly-trust searchaly-trust--{{ block.settings.alignment }}" {{ block.shopify_attributes }}>
+  {%- if block.settings.heading != blank -%}
+    <div class="searchaly-trust__heading">{{ block.settings.heading }}</div>
+  {%- endif -%}
+  <div class="searchaly-trust__row">
+    {%- if block.settings.visa -%}<span class="searchaly-trust__badge" style="color:#1a1f71;">VISA</span>{%- endif -%}
+    {%- if block.settings.mastercard -%}<span class="searchaly-trust__badge" style="color:#eb001b;">Mastercard</span>{%- endif -%}
+    {%- if block.settings.amex -%}<span class="searchaly-trust__badge" style="color:#2e77bc;">AMEX</span>{%- endif -%}
+    {%- if block.settings.paypal -%}<span class="searchaly-trust__badge" style="color:#003087;">PayPal</span>{%- endif -%}
+    {%- if block.settings.applepay -%}<span class="searchaly-trust__badge" style="color:#000000;">Apple Pay</span>{%- endif -%}
+    {%- if block.settings.googlepay -%}<span class="searchaly-trust__badge" style="color:#5f6368;">Google Pay</span>{%- endif -%}
+    {%- if block.settings.ssl -%}<span class="searchaly-trust__badge" style="color:#1f7a3d;">🔒 SSL Secure</span>{%- endif -%}
+    {%- if block.settings.moneyback -%}<span class="searchaly-trust__badge" style="color:#7a1f1f;">↩ Money-back</span>{%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Trust Badges",
+  "stylesheet": "searchaly.css",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Guaranteed safe & secure checkout" },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Alignment",
+      "default": "center",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ]
+    },
+    { "type": "header", "content": "Badges to show" },
+    { "type": "checkbox", "id": "visa", "label": "Visa", "default": true },
+    { "type": "checkbox", "id": "mastercard", "label": "Mastercard", "default": true },
+    { "type": "checkbox", "id": "amex", "label": "American Express", "default": true },
+    { "type": "checkbox", "id": "paypal", "label": "PayPal", "default": true },
+    { "type": "checkbox", "id": "applepay", "label": "Apple Pay", "default": true },
+    { "type": "checkbox", "id": "googlepay", "label": "Google Pay", "default": false },
+    { "type": "checkbox", "id": "ssl", "label": "SSL Secure", "default": false },
+    { "type": "checkbox", "id": "moneyback", "label": "Money-back guarantee", "default": false }
+  ]
+}
+{% endschema %}
