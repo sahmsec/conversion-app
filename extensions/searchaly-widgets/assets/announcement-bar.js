@@ -112,8 +112,10 @@
       bar.appendChild(close);
     }
 
-    document.body.appendChild(bar);
-    S.stack(bar);
+    if (!S.mountInline(bar, "announcement-bar")) {
+      document.body.appendChild(bar);
+      S.stack(bar);
+    }
     requestAnimationFrame(function () {
       bar.classList.add("is-visible");
     });

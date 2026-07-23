@@ -1,33 +1,17 @@
 {%- comment -%}
-  Announcement — inline app BLOCK (drag-and-drop). Renders an inline banner that
-  rotates its messages in place. Configured in the theme editor; self-contained.
+  Announcement Bar — placement block. Drop it where you want the announcement to
+  appear; it renders inline here using your Conversion App dashboard settings.
+  Requires the Conversion App embed to be enabled (Theme settings → App embeds).
 {%- endcomment -%}
-<div
-  class="searchaly-inline-announce"
-  data-searchaly-inline-announce
-  data-m1="{{ block.settings.message_1 | escape }}"
-  data-m2="{{ block.settings.message_2 | escape }}"
-  data-m3="{{ block.settings.message_3 | escape }}"
-  data-rotate="{{ block.settings.rotate_ms }}"
-  data-link="{{ block.settings.link }}"
-  style="background: {{ block.settings.bg }}; color: {{ block.settings.text }};"
-  {{ block.shopify_attributes }}
-></div>
+<div data-searchaly-slot="announcement-bar" {{ block.shopify_attributes }}></div>
 
 {% schema %}
 {
-  "name": "Announcement (inline)",
+  "name": "Announcement Bar",
   "target": "section",
-  "javascript": "inline-announcement.js",
   "stylesheet": "searchaly.css",
   "settings": [
-    { "type": "text", "id": "message_1", "label": "Message 1", "default": "Welcome to our store!" },
-    { "type": "text", "id": "message_2", "label": "Message 2 (optional)" },
-    { "type": "text", "id": "message_3", "label": "Message 3 (optional)" },
-    { "type": "range", "id": "rotate_ms", "label": "Rotate every", "min": 1000, "max": 9000, "step": 500, "default": 4000, "unit": "ms" },
-    { "type": "url", "id": "link", "label": "Link (optional)" },
-    { "type": "color", "id": "bg", "label": "Background", "default": "#111827" },
-    { "type": "color", "id": "text", "label": "Text", "default": "#ffffff" }
+    { "type": "paragraph", "content": "Set this widget's messages, rotation and colors in the Conversion App dashboard. Make sure the Conversion App embed is on (Theme settings → App embeds)." }
   ]
 }
 {% endschema %}

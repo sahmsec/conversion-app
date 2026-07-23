@@ -23,8 +23,6 @@
   }
 
   window.Searchaly.register("quantity-breaks", function (cfg) {
-    if (!/\/products\/[^/?#]+/.test(window.location.pathname)) return;
-
     var tiers = (cfg.tiers || []).filter(function (t) {
       return t && Number(t.minQuantity) > 0 && Number(t.percent) > 0;
     });
@@ -32,9 +30,6 @@
     tiers.sort(function (a, b) {
       return a.minQuantity - b.minQuantity;
     });
-
-    var form = findProductForm();
-    if (!form) return;
 
     var accent = (cfg.global && cfg.global.colors && cfg.global.colors.accent) || "#4f46e5";
     var bestPercent = tiers.reduce(function (m, t) {
@@ -75,6 +70,12 @@
     });
     wrap.appendChild(list);
 
+    // Placed via a block? Render there. Otherwise auto-place near the buy button
+    // on product pages only.
+    if (window.Searchaly.mountInline(wrap, "quantity-breaks")) return;
+    if (!/\/products\/[^/?#]+/.test(window.location.pathname)) return;
+    var form = findProductForm();
+    if (!form) return;
     var anchor = form.querySelector(
       '.product-form__buttons,.product-form__submit,[type="submit"],[name="add"]',
     );

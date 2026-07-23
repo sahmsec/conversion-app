@@ -32,8 +32,10 @@
       bar.appendChild(track);
     }
 
-    document.body.appendChild(bar);
-    S.stack(bar);
+    if (!S.mountInline(bar, "free-shipping-bar")) {
+      document.body.appendChild(bar);
+      S.stack(bar);
+    }
     if (global.dismissible) S.addDismiss(bar, "free-shipping-bar");
 
     var goalTracked = false;

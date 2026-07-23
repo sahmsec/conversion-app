@@ -152,6 +152,8 @@
 
     wrap.appendChild(list);
 
+    // Placed via a block? Render there. Otherwise auto-place below the buy section.
+    if (S.mountInline(wrap, "upsell")) return;
     var form = findProductForm();
     if (form && form.parentNode) {
       form.parentNode.insertBefore(wrap, form.nextSibling);

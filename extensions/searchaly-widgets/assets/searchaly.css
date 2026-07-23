@@ -254,6 +254,22 @@
   padding-right: 32px;
 }
 
+/* Inline placement (dropped into a placement block) — render in the page flow,
+   not pinned to a screen edge. Always visible (no entrance-animation hiding). */
+.searchaly-bar[data-inline] {
+  position: static;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  margin: 12px 0;
+  box-shadow: none;
+  transform: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  border-radius: var(--sa-radius, 8px);
+}
+
 /* Form factor: floating pill / boxed card (vs default full-width bar).
    Centered with margin auto (NOT transform) so the slide animation's transform
    stays free. Lifted off the edge by core.js restack(). */

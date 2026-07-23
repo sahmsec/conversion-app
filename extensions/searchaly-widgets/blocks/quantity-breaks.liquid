@@ -1,0 +1,18 @@
+{%- comment -%}
+  Quantity Breaks — placement block. Drop it where you want the volume-discount tier
+  table to appear (e.g. above or below the buy button); it renders inline here using
+  your Conversion App dashboard settings. Requires the Conversion App embed to be
+  enabled (Theme settings → App embeds).
+{%- endcomment -%}
+<div data-searchaly-slot="quantity-breaks" {{ block.shopify_attributes }}></div>
+
+{% schema %}
+{
+  "name": "Quantity Breaks",
+  "target": "section",
+  "stylesheet": "searchaly.css",
+  "settings": [
+    { "type": "paragraph", "content": "Set the discount tiers and heading in the Conversion App dashboard. Make sure the Conversion App embed is on (Theme settings → App embeds)." }
+  ]
+}
+{% endschema %}

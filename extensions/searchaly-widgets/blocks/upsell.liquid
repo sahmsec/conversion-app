@@ -1,0 +1,18 @@
+{%- comment -%}
+  Upsell — placement block. Drop it on a product page where you want the "you may
+  also like" recommendations to appear; it renders inline here using your Conversion
+  App dashboard settings. Requires the Conversion App embed to be enabled
+  (Theme settings → App embeds).
+{%- endcomment -%}
+<div data-searchaly-slot="upsell" {{ block.shopify_attributes }}></div>
+
+{% schema %}
+{
+  "name": "Upsell",
+  "target": "section",
+  "stylesheet": "searchaly.css",
+  "settings": [
+    { "type": "paragraph", "content": "Set the heading, recommendation type and layout in the Conversion App dashboard. Make sure the Conversion App embed is on (Theme settings → App embeds)." }
+  ]
+}
+{% endschema %}

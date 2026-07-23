@@ -57,8 +57,10 @@
     var text = document.createElement("div");
     text.className = "searchaly-bar__text";
     bar.appendChild(text);
-    document.body.appendChild(bar);
-    S.stack(bar);
+    if (!S.mountInline(bar, "countdown")) {
+      document.body.appendChild(bar);
+      S.stack(bar);
+    }
     if (global.dismissible) S.addDismiss(bar, "countdown");
     requestAnimationFrame(function () {
       bar.classList.add("is-visible");

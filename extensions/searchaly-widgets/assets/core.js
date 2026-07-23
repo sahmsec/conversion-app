@@ -266,6 +266,21 @@
   }
   if (window.addEventListener) window.addEventListener("resize", restack);
 
+  // --- Inline placement (drag-and-drop blocks) ----------------------------
+  // If the merchant dropped a placement block for this widget, render into it
+  // (inline, in the page flow) instead of floating/auto-placing. Returns true if
+  // it mounted into a slot. The widget's config still comes from the dashboard.
+  function mountInline(node, key) {
+    var slot = document.querySelector(
+      '[data-searchaly-slot="' + key + '"]:not([data-searchaly-filled])',
+    );
+    if (!slot) return false;
+    slot.setAttribute("data-searchaly-filled", "1");
+    node.setAttribute("data-inline", "1");
+    slot.appendChild(node);
+    return true;
+  }
+
   // --- Styling + tokens ----------------------------------------------------
   function applyTheme(node, global) {
     if (!global) return;
@@ -396,6 +411,7 @@
     getCart: getCart,
     fill: fill,
     stack: stack,
+    mountInline: mountInline,
     track: track,
     injectCss: injectCss,
     addDismiss: addDismiss,

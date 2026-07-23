@@ -31,8 +31,10 @@
       bar.appendChild(track);
     }
 
-    document.body.appendChild(bar);
-    S.stack(bar);
+    if (!S.mountInline(bar, "cart-goal")) {
+      document.body.appendChild(bar);
+      S.stack(bar);
+    }
     if (global.dismissible) S.addDismiss(bar, "cart-goal");
 
     var goalTracked = false;
