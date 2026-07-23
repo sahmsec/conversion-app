@@ -1,0 +1,30 @@
+{%- comment -%}
+  Cart Goal — inline app BLOCK. Best placed inside the cart / slide-cart drawer or
+  on the product page. Renders inline and updates with the cart.
+{%- endcomment -%}
+<div
+  class="searchaly-inline-bar searchaly-inline-bar--cart-goal"
+  data-searchaly-inline-bar
+  data-goal="{{ block.settings.goal | times: 100 | round }}"
+  data-reward="{{ block.settings.reward | escape }}"
+  data-before="{{ block.settings.message_before | escape }}"
+  data-after="{{ block.settings.message_after | escape }}"
+  data-progress="{{ block.settings.show_progress }}"
+  {{ block.shopify_attributes }}
+></div>
+
+{% schema %}
+{
+  "name": "Cart Goal (inline)",
+  "target": "section",
+  "javascript": "inline-bars.js",
+  "stylesheet": "searchaly.css",
+  "settings": [
+    { "type": "number", "id": "goal", "label": "Goal amount (in your currency)", "default": 75 },
+    { "type": "text", "id": "reward", "label": "Reward", "default": "a free gift" },
+    { "type": "text", "id": "message_before", "label": "Message before goal", "default": "You're {{remaining}} away from {{reward}}!" },
+    { "type": "text", "id": "message_after", "label": "Message when reached", "default": "🎁 You've earned {{reward}}!" },
+    { "type": "checkbox", "id": "show_progress", "label": "Show progress bar", "default": true }
+  ]
+}
+{% endschema %}

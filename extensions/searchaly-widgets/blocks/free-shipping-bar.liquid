@@ -1,0 +1,28 @@
+{%- comment -%}
+  Free Shipping Bar — inline app BLOCK. Drag onto the product page or into a cart
+  drawer section. Renders inline (not a floating bar) and updates with the cart.
+{%- endcomment -%}
+<div
+  class="searchaly-inline-bar searchaly-inline-bar--fsb"
+  data-searchaly-inline-bar
+  data-goal="{{ block.settings.goal | times: 100 | round }}"
+  data-before="{{ block.settings.message_before | escape }}"
+  data-after="{{ block.settings.message_after | escape }}"
+  data-progress="{{ block.settings.show_progress }}"
+  {{ block.shopify_attributes }}
+></div>
+
+{% schema %}
+{
+  "name": "Free Shipping Bar (inline)",
+  "target": "section",
+  "javascript": "inline-bars.js",
+  "stylesheet": "searchaly.css",
+  "settings": [
+    { "type": "number", "id": "goal", "label": "Free shipping goal (in your currency)", "default": 50 },
+    { "type": "text", "id": "message_before", "label": "Message before goal", "default": "Spend {{remaining}} more for FREE shipping!" },
+    { "type": "text", "id": "message_after", "label": "Message when reached", "default": "🎉 You've unlocked FREE shipping!" },
+    { "type": "checkbox", "id": "show_progress", "label": "Show progress bar", "default": true }
+  ]
+}
+{% endschema %}
