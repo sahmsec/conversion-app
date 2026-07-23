@@ -1,0 +1,29 @@
+{%- comment -%}
+  Countdown — inline app BLOCK (drag-and-drop). Renders a live countdown inline.
+  Configured in the theme editor; self-contained. Use [timer] in the message.
+{%- endcomment -%}
+<div
+  class="searchaly-inline-countdown"
+  data-searchaly-inline-countdown
+  data-end="{{ block.settings.end_at }}"
+  data-message="{{ block.settings.message | escape }}"
+  data-expired="{{ block.settings.expired | escape }}"
+  style="background: {{ block.settings.bg }}; color: {{ block.settings.text }};"
+  {{ block.shopify_attributes }}
+></div>
+
+{% schema %}
+{
+  "name": "Countdown (inline)",
+  "target": "section",
+  "javascript": "inline-countdown.js",
+  "stylesheet": "searchaly.css",
+  "settings": [
+    { "type": "text", "id": "end_at", "label": "End date/time (e.g. 2026-08-01T18:00)", "default": "2026-12-31T23:59" },
+    { "type": "text", "id": "message", "label": "Message (use [timer])", "default": "Sale ends in [timer]" },
+    { "type": "text", "id": "expired", "label": "Message when expired", "default": "This offer has ended" },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#111827" },
+    { "type": "color", "id": "text", "label": "Text", "default": "#ffffff" }
+  ]
+}
+{% endschema %}

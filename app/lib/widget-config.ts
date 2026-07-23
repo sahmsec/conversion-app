@@ -19,6 +19,7 @@ export const WIDGET_TYPES = [
   "COUNTDOWN",
   "SALES_POP",
   "QUANTITY_BREAKS",
+  "UPSELL",
 ] as const;
 
 export type WidgetType = (typeof WIDGET_TYPES)[number];
@@ -33,6 +34,7 @@ export const STOREFRONT_KEY: Record<WidgetType, string> = {
   COUNTDOWN: "countdown",
   SALES_POP: "sales-pop",
   QUANTITY_BREAKS: "quantity-breaks",
+  UPSELL: "upsell",
 };
 
 // ---------------------------------------------------------------------------
@@ -243,6 +245,22 @@ const DEFAULT_QUANTITY_BREAKS: QuantityBreaksConfig = {
   discountId: "",
 };
 
+export type UpsellConfig = {
+  heading: string;
+  intent: "related" | "complementary"; // related = "you may also like"; complementary = "frequently bought together"
+  maxItems: number;
+  layout: "row" | "grid";
+  ctaText: string;
+};
+
+const DEFAULT_UPSELL: UpsellConfig = {
+  heading: "You may also like",
+  intent: "related",
+  maxItems: 4,
+  layout: "row",
+  ctaText: "Add",
+};
+
 /** Widget-specific defaults keyed by type. */
 export const DEFAULT_WIDGET: Record<WidgetType, Record<string, unknown>> = {
   STICKY_ATC: { ...DEFAULT_STICKY_ATC },
@@ -253,6 +271,7 @@ export const DEFAULT_WIDGET: Record<WidgetType, Record<string, unknown>> = {
   COUNTDOWN: { ...DEFAULT_COUNTDOWN },
   SALES_POP: { ...DEFAULT_SALES_POP },
   QUANTITY_BREAKS: { ...DEFAULT_QUANTITY_BREAKS },
+  UPSELL: { ...DEFAULT_UPSELL },
 };
 
 export type WidgetConfig = {
@@ -479,6 +498,17 @@ function normalizeQuantityBreaks(raw: unknown): QuantityBreaksConfig {
   };
 }
 
+function normalizeUpsell(raw: unknown): UpsellConfig {
+  const r = obj(raw);
+  return {
+    heading: str(r.heading, DEFAULT_UPSELL.heading),
+    intent: oneOf(r.intent, ["related", "complementary"] as const, DEFAULT_UPSELL.intent),
+    maxItems: clampInt(r.maxItems, 1, 10, DEFAULT_UPSELL.maxItems),
+    layout: oneOf(r.layout, ["row", "grid"] as const, DEFAULT_UPSELL.layout),
+    ctaText: str(r.ctaText, DEFAULT_UPSELL.ctaText),
+  };
+}
+
 function normalizeSalesPop(raw: unknown): SalesPopConfig {
   const r = obj(raw);
   return {
@@ -501,6 +531,7 @@ const WIDGET_NORMALIZERS: Partial<Record<WidgetType, (raw: unknown) => Record<st
   COUNTDOWN: normalizeCountdown,
   SALES_POP: normalizeSalesPop,
   QUANTITY_BREAKS: normalizeQuantityBreaks,
+  UPSELL: normalizeUpsell,
 };
 
 /** Normalize a stored/submitted config for a widget type into a valid `{ global, widget }`. */

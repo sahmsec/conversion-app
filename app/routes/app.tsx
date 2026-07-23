@@ -32,6 +32,7 @@ export default function App() {
         <Link to="/app/widgets/countdown">Countdown Timer</Link>
         <Link to="/app/widgets/sales-pop">Sales Pop</Link>
         <Link to="/app/widgets/quantity-breaks">Quantity Breaks</Link>
+        <Link to="/app/widgets/upsell">Upsell</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>

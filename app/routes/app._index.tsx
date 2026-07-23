@@ -66,6 +66,11 @@ const WIDGET_META: Record<WidgetType, { name: string; description: string; route
     description: "Volume discount — buy more, save more (auto-applied at checkout).",
     route: "/app/widgets/quantity-breaks",
   },
+  UPSELL: {
+    name: "Upsell",
+    description: "Recommend related products on the product page with one-tap add.",
+    route: "/app/widgets/upsell",
+  },
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {

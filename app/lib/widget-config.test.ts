@@ -256,6 +256,24 @@ describe("normalizeConfig — Quantity Breaks", () => {
   });
 });
 
+describe("normalizeConfig — Upsell", () => {
+  it("fills upsell defaults and rejects a bad intent/layout", () => {
+    const c = normalizeConfig("UPSELL", { widget: { intent: "psychic", layout: "spiral" } });
+    expect(c.widget.intent).toBe("related");
+    expect(c.widget.layout).toBe("row");
+    expect(c.widget.maxItems).toBe(4);
+  });
+
+  it("clamps maxItems and keeps a valid intent", () => {
+    const c = normalizeConfig("UPSELL", {
+      widget: { intent: "complementary", maxItems: 99, layout: "grid" },
+    });
+    expect(c.widget.intent).toBe("complementary");
+    expect(c.widget.maxItems).toBe(10);
+    expect(c.widget.layout).toBe("grid");
+  });
+});
+
 describe("normalizeConfig — Countdown", () => {
   it("fills defaults, clamps duration, keeps evergreen mode", () => {
     const c = normalizeConfig("COUNTDOWN", {
