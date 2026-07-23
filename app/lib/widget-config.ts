@@ -33,6 +33,19 @@ export const STOREFRONT_KEY: Record<WidgetType, string> = {
 // Global settings (shared by all widgets)
 // ---------------------------------------------------------------------------
 
+/** Where a widget is allowed to show (display rules). */
+export type Targeting = {
+  pages: "all" | "home" | "product" | "collection" | "cart";
+  productHandles: string[]; // when on product pages, limit to these (empty = all)
+  collectionHandles: string[]; // when on collection pages, limit to these (empty = all)
+};
+
+export const DEFAULT_TARGETING: Targeting = {
+  pages: "all",
+  productHandles: [],
+  collectionHandles: [],
+};
+
 export type GlobalWidgetSettings = {
   devices: { desktop: boolean; mobile: boolean };
   colors: { bg: string; text: string; accent: string };
@@ -40,6 +53,7 @@ export type GlobalWidgetSettings = {
   animation: { type: "none" | "fade" | "slide"; speedMs: number };
   position: "top" | "bottom";
   schedule: { start?: string; end?: string; days: number[] } | null;
+  targeting: Targeting;
 };
 
 export const DEFAULT_GLOBAL: GlobalWidgetSettings = {
@@ -49,6 +63,7 @@ export const DEFAULT_GLOBAL: GlobalWidgetSettings = {
   animation: { type: "fade", speedMs: 200 },
   position: "bottom",
   schedule: null,
+  targeting: { pages: "all", productHandles: [], collectionHandles: [] },
 };
 
 // ---------------------------------------------------------------------------
@@ -229,7 +244,28 @@ export function normalizeGlobal(raw: unknown): GlobalWidgetSettings {
     },
     position: oneOf(r.position, ["top", "bottom"] as const, DEFAULT_GLOBAL.position),
     schedule,
+    targeting: normalizeTargeting(r.targeting),
   };
+}
+
+function normalizeTargeting(raw: unknown): Targeting {
+  const r = obj(raw);
+  return {
+    pages: oneOf(
+      r.pages,
+      ["all", "home", "product", "collection", "cart"] as const,
+      DEFAULT_TARGETING.pages,
+    ),
+    productHandles: handleArray(r.productHandles),
+    collectionHandles: handleArray(r.collectionHandles),
+  };
+}
+
+function handleArray(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+    .map((s) => s.trim());
 }
 
 /** Normalize an array of non-empty strings; returns a copy of `d` if none valid. */

@@ -10,7 +10,7 @@ import {
   Text,
   TextField,
 } from "@shopify/polaris";
-import type { GlobalWidgetSettings } from "../../lib/widget-config";
+import type { GlobalWidgetSettings, Targeting } from "../../lib/widget-config";
 
 /**
  * The shared "Global Settings For Every Widget" panel (PRD). Fully controlled:
@@ -57,6 +57,53 @@ export function GlobalSettingsPanel({
           value={value.position}
           onChange={(v) => patch({ position: v as GlobalWidgetSettings["position"] })}
         />
+      </BlockStack>
+
+      <Divider />
+
+      {/* Display rules */}
+      <BlockStack gap="200">
+        <Text as="h3" variant="headingSm">
+          Where to show
+        </Text>
+        <Select
+          label="Pages"
+          options={[
+            { label: "All pages", value: "all" },
+            { label: "Home page", value: "home" },
+            { label: "Product pages", value: "product" },
+            { label: "Collection pages", value: "collection" },
+            { label: "Cart page", value: "cart" },
+          ]}
+          value={value.targeting.pages}
+          onChange={(p) =>
+            patch({ targeting: { ...value.targeting, pages: p as Targeting["pages"] } })
+          }
+        />
+        {value.targeting.pages === "product" && (
+          <TextField
+            label="Only these products (optional)"
+            value={value.targeting.productHandles.join("\n")}
+            onChange={(v) =>
+              patch({ targeting: { ...value.targeting, productHandles: v.split("\n") } })
+            }
+            helpText="Product handles, one per line (the end of the product URL, e.g. blue-t-shirt). Leave blank for all products."
+            autoComplete="off"
+            multiline={2}
+          />
+        )}
+        {value.targeting.pages === "collection" && (
+          <TextField
+            label="Only these collections (optional)"
+            value={value.targeting.collectionHandles.join("\n")}
+            onChange={(v) =>
+              patch({ targeting: { ...value.targeting, collectionHandles: v.split("\n") } })
+            }
+            helpText="Collection handles, one per line. Leave blank for all collections."
+            autoComplete="off"
+            multiline={2}
+          />
+        )}
       </BlockStack>
 
       <Divider />

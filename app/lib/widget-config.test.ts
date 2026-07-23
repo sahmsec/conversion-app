@@ -53,6 +53,28 @@ describe("normalizeGlobal", () => {
   });
 });
 
+describe("normalizeGlobal — targeting", () => {
+  it("defaults to all pages with empty handle lists", () => {
+    expect(normalizeGlobal({}).targeting).toEqual({
+      pages: "all",
+      productHandles: [],
+      collectionHandles: [],
+    });
+  });
+
+  it("keeps a valid page scope and trims/filters handles", () => {
+    const g = normalizeGlobal({
+      targeting: { pages: "product", productHandles: ["  a ", "", "b", 3] },
+    });
+    expect(g.targeting.pages).toBe("product");
+    expect(g.targeting.productHandles).toEqual(["a", "b"]);
+  });
+
+  it("rejects an unknown page scope", () => {
+    expect(normalizeGlobal({ targeting: { pages: "checkout" } }).targeting.pages).toBe("all");
+  });
+});
+
 describe("normalizeConfig (STICKY_ATC)", () => {
   it("fills sticky defaults from empty input", () => {
     const c = normalizeConfig("STICKY_ATC", {});

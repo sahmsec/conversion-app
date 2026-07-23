@@ -80,8 +80,48 @@
     return true;
   }
 
+  // Current page type + product/collection handle, from the URL.
+  function currentPage() {
+    var path = window.location.pathname || "/";
+    var prod = path.match(/\/products\/([^/?#]+)/);
+    var coll = path.match(/\/collections\/([^/?#]+)/);
+    var type;
+    if (prod) type = "product";
+    else if (path === "/" || path === "") type = "home";
+    else if (coll) type = "collection";
+    else if (path.indexOf("/cart") === 0) type = "cart";
+    else type = "other";
+    return {
+      type: type,
+      product: prod ? prod[1] : null,
+      collection: type === "collection" && coll ? coll[1] : null,
+    };
+  }
+
+  function isArr(v) {
+    return Object.prototype.toString.call(v) === "[object Array]";
+  }
+
+  function pageAllowed(t) {
+    if (!t) return true;
+    var page = currentPage();
+    var scope = t.pages || "all";
+    if (scope !== "all" && scope !== page.type) return false;
+    if (isArr(t.productHandles) && t.productHandles.length > 0 && page.product) {
+      if (t.productHandles.indexOf(page.product) === -1) return false;
+    }
+    if (isArr(t.collectionHandles) && t.collectionHandles.length > 0 && page.collection) {
+      if (t.collectionHandles.indexOf(page.collection) === -1) return false;
+    }
+    return true;
+  }
+
   function allowed(global) {
-    return deviceAllowed(global) && scheduleAllowed(global);
+    return (
+      deviceAllowed(global) &&
+      scheduleAllowed(global) &&
+      pageAllowed(global && global.targeting)
+    );
   }
 
   // --- Money ---------------------------------------------------------------
