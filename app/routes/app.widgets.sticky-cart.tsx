@@ -33,7 +33,7 @@ export default function StickyCartSettings() {
       <WidgetSettingsForm
         description="A persistent Add to cart bar that keeps the buy button in view as shoppers scroll the product page."
         enabled={form.enabled}
-        onToggleEnabled={form.setEnabled}
+        onToggleEnabled={form.toggleEnabled}
         onSave={form.save}
         saving={form.saving}
         dirty={form.dirty}

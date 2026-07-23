@@ -68,6 +68,8 @@ export function WidgetSettingsForm({
                   variant={enabled ? "secondary" : "primary"}
                   tone={enabled ? "critical" : undefined}
                   onClick={() => onToggleEnabled(!enabled)}
+                  loading={saving}
+                  disabled={saving}
                 >
                   {enabled ? "Turn off" : "Turn on"}
                 </Button>

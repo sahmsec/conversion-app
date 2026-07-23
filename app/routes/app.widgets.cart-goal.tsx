@@ -34,7 +34,7 @@ export default function CartGoalSettings() {
       <WidgetSettingsForm
         description="Nudge shoppers to spend a little more to unlock a reward such as a free gift."
         enabled={form.enabled}
-        onToggleEnabled={form.setEnabled}
+        onToggleEnabled={form.toggleEnabled}
         onSave={form.save}
         saving={form.saving}
         dirty={form.dirty}

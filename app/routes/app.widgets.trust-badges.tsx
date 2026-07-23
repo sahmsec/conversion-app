@@ -51,7 +51,7 @@ export default function TrustBadgesSettings() {
       <WidgetSettingsForm
         description="Show payment, security, and guarantee badges near the buy button to build shopper confidence."
         enabled={form.enabled}
-        onToggleEnabled={form.setEnabled}
+        onToggleEnabled={form.toggleEnabled}
         onSave={form.save}
         saving={form.saving}
         dirty={form.dirty}

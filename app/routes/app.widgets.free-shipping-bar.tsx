@@ -34,7 +34,7 @@ export default function FreeShippingBarSettings() {
       <WidgetSettingsForm
         description="A dynamic bar showing shoppers how much more they need to spend to unlock free shipping."
         enabled={form.enabled}
-        onToggleEnabled={form.setEnabled}
+        onToggleEnabled={form.toggleEnabled}
         onSave={form.save}
         saving={form.saving}
         dirty={form.dirty}

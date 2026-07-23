@@ -43,6 +43,20 @@ export function useWidgetSettingsForm<W>(initial: WidgetFormInitial<W>) {
     );
   }, [enabled, global, widget, fetcher]);
 
+  // An on/off toggle must take effect immediately — merchants don't expect to
+  // press Save to turn a widget on. Persist right away with the current config.
+  const toggleEnabled = useCallback(
+    (next: boolean) => {
+      setEnabled(next);
+      submittedRef.current = { enabled: next, global, widget };
+      fetcher.submit(
+        { payload: JSON.stringify({ enabled: next, config: { global, widget } }) },
+        { method: "POST" },
+      );
+    },
+    [global, widget, fetcher],
+  );
+
   useEffect(() => {
     if (fetcher.state !== "idle" || !fetcher.data) return;
     if (fetcher.data.ok && fetcher.data.synced) {
@@ -68,6 +82,7 @@ export function useWidgetSettingsForm<W>(initial: WidgetFormInitial<W>) {
   return {
     enabled,
     setEnabled,
+    toggleEnabled,
     global,
     setGlobal,
     widget,

@@ -41,7 +41,7 @@ export default function AnnouncementBarSettings() {
       <WidgetSettingsForm
         description="A rotating announcement bar for promotions, shipping notices, and countdowns."
         enabled={form.enabled}
-        onToggleEnabled={form.setEnabled}
+        onToggleEnabled={form.toggleEnabled}
         onSave={form.save}
         saving={form.saving}
         dirty={form.dirty}

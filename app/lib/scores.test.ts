@@ -42,6 +42,14 @@ describe("scoreTone / scoreLabel", () => {
     expect(scoreTone(50)).toBe("warning");
     expect(scoreTone(20)).toBe("critical");
   });
+
+  it("tone and label never contradict (65 = Good + success)", () => {
+    // A reachable Conversion Score (25+20+20). Colour must agree with wording.
+    expect(scoreTone(65)).toBe("success");
+    expect(scoreLabel(65)).toBe("Good");
+    expect(scoreTone(45)).toBe("warning");
+    expect(scoreLabel(45)).toBe("Fair");
+  });
   it("labels ranges", () => {
     expect(scoreLabel(90)).toBe("Excellent");
     expect(scoreLabel(65)).toBe("Good");

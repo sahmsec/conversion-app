@@ -31,8 +31,10 @@ export function storeHealthScore(widgets: WidgetStatus[]): number {
 
 export type ScoreTone = "success" | "warning" | "critical";
 
+// Bands are aligned with scoreLabel so the colour never contradicts the wording:
+//   >= 60 success ("Good"/"Excellent") · 40-59 warning ("Fair") · < 40 critical.
 export function scoreTone(score: number): ScoreTone {
-  if (score >= 70) return "success";
+  if (score >= 60) return "success";
   if (score >= 40) return "warning";
   return "critical";
 }
