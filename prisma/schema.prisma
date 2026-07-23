@@ -53,6 +53,20 @@ enum WidgetType {
   TRUST_BADGES
   CART_GOAL
   COUNTDOWN
+  SALES_POP
+}
+
+/// Rolling recent orders for the Sales Pop widget (real social proof). Populated by
+/// the orders/create webhook; the storefront reads the latest few via App Proxy.
+model RecentSale {
+  id        String   @id @default(cuid())
+  shop      String
+  product   String
+  city      String?
+  region    String?
+  createdAt DateTime @default(now())
+
+  @@index([shop, createdAt])
 }
 
 /// Aggregated per-day widget analytics (impressions / clicks / goals). One row per

@@ -17,6 +17,7 @@ export const WIDGET_TYPES = [
   "TRUST_BADGES",
   "CART_GOAL",
   "COUNTDOWN",
+  "SALES_POP",
 ] as const;
 
 export type WidgetType = (typeof WIDGET_TYPES)[number];
@@ -29,6 +30,7 @@ export const STOREFRONT_KEY: Record<WidgetType, string> = {
   TRUST_BADGES: "trust-badges",
   CART_GOAL: "cart-goal",
   COUNTDOWN: "countdown",
+  SALES_POP: "sales-pop",
 };
 
 // ---------------------------------------------------------------------------
@@ -176,6 +178,26 @@ const DEFAULT_COUNTDOWN: CountdownConfig = {
   hideOnExpire: false,
 };
 
+export type SalesPopConfig = {
+  corner: "left" | "right"; // which bottom corner the popup sits in
+  intervalSeconds: number; // gap between pops
+  durationSeconds: number; // how long each pop stays on screen
+  maxPerSession: number; // cap pops shown per pageview (0 = unlimited)
+  showLocation: boolean; // include the buyer's city/region (no names — privacy-safe)
+  showTimeAgo: boolean; // include a relative "2 hours ago"
+  template: string; // supports {{product}} and {{location}}
+};
+
+const DEFAULT_SALES_POP: SalesPopConfig = {
+  corner: "left",
+  intervalSeconds: 8,
+  durationSeconds: 5,
+  maxPerSession: 8,
+  showLocation: true,
+  showTimeAgo: true,
+  template: "Someone in {{location}} purchased {{product}}",
+};
+
 /** Widget-specific defaults keyed by type. */
 export const DEFAULT_WIDGET: Record<WidgetType, Record<string, unknown>> = {
   STICKY_ATC: { ...DEFAULT_STICKY_ATC },
@@ -184,6 +206,7 @@ export const DEFAULT_WIDGET: Record<WidgetType, Record<string, unknown>> = {
   TRUST_BADGES: { ...DEFAULT_TRUST_BADGES },
   CART_GOAL: { ...DEFAULT_CART_GOAL },
   COUNTDOWN: { ...DEFAULT_COUNTDOWN },
+  SALES_POP: { ...DEFAULT_SALES_POP },
 };
 
 export type WidgetConfig = {
@@ -374,6 +397,19 @@ function normalizeCountdown(raw: unknown): CountdownConfig {
   };
 }
 
+function normalizeSalesPop(raw: unknown): SalesPopConfig {
+  const r = obj(raw);
+  return {
+    corner: oneOf(r.corner, ["left", "right"] as const, DEFAULT_SALES_POP.corner),
+    intervalSeconds: clampInt(r.intervalSeconds, 3, 120, DEFAULT_SALES_POP.intervalSeconds),
+    durationSeconds: clampInt(r.durationSeconds, 2, 30, DEFAULT_SALES_POP.durationSeconds),
+    maxPerSession: clampInt(r.maxPerSession, 0, 100, DEFAULT_SALES_POP.maxPerSession),
+    showLocation: bool(r.showLocation, DEFAULT_SALES_POP.showLocation),
+    showTimeAgo: bool(r.showTimeAgo, DEFAULT_SALES_POP.showTimeAgo),
+    template: str(r.template, DEFAULT_SALES_POP.template),
+  };
+}
+
 const WIDGET_NORMALIZERS: Partial<Record<WidgetType, (raw: unknown) => Record<string, unknown>>> = {
   STICKY_ATC: normalizeStickyAtc,
   FREE_SHIPPING_BAR: normalizeFreeShippingBar,
@@ -381,6 +417,7 @@ const WIDGET_NORMALIZERS: Partial<Record<WidgetType, (raw: unknown) => Record<st
   TRUST_BADGES: normalizeTrustBadges,
   ANNOUNCEMENT_BAR: normalizeAnnouncementBar,
   COUNTDOWN: normalizeCountdown,
+  SALES_POP: normalizeSalesPop,
 };
 
 /** Normalize a stored/submitted config for a widget type into a valid `{ global, widget }`. */

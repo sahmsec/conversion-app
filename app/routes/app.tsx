@@ -30,6 +30,7 @@ export default function App() {
         <Link to="/app/widgets/trust-badges">Trust Badges</Link>
         <Link to="/app/widgets/announcement-bar">Announcement Bar</Link>
         <Link to="/app/widgets/countdown">Countdown Timer</Link>
+        <Link to="/app/widgets/sales-pop">Sales Pop</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>

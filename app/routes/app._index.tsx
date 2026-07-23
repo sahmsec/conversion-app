@@ -56,6 +56,11 @@ const WIDGET_META: Record<WidgetType, { name: string; description: string; route
     description: "Urgency timer — to a sale date or a per-visitor countdown.",
     route: "/app/widgets/countdown",
   },
+  SALES_POP: {
+    name: "Sales Pop",
+    description: "Real recent-order social proof — “Someone in Austin just bought…”.",
+    route: "/app/widgets/sales-pop",
+  },
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {

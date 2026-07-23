@@ -16,6 +16,7 @@ const CONVERSION_WEIGHTS: Record<WidgetType, number> = {
   ANNOUNCEMENT_BAR: 20,
   CART_GOAL: 15,
   COUNTDOWN: 15,
+  SALES_POP: 15,
 };
 
 export function conversionScore(widgets: WidgetStatus[]): number {
