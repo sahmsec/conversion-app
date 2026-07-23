@@ -52,4 +52,5 @@ enum WidgetType {
   FREE_SHIPPING_BAR
   TRUST_BADGES
   CART_GOAL
+  COUNTDOWN
 }

@@ -189,3 +189,20 @@ describe("normalizeConfig — Announcement Bar", () => {
     expect((c.widget.messages as string[]).length).toBe(1);
   });
 });
+
+describe("normalizeConfig — Countdown", () => {
+  it("fills defaults, clamps duration, keeps evergreen mode", () => {
+    const c = normalizeConfig("COUNTDOWN", {
+      widget: { mode: "evergreen", durationMinutes: 0 },
+    });
+    expect(c.widget.mode).toBe("evergreen");
+    expect(c.widget.durationMinutes).toBe(1);
+    expect(typeof c.widget.message).toBe("string");
+  });
+
+  it("rejects an invalid mode and blanks an empty endAt", () => {
+    const c = normalizeConfig("COUNTDOWN", { widget: { mode: "weird", endAt: "" } });
+    expect(c.widget.mode).toBe("fixed");
+    expect(c.widget.endAt).toBeNull();
+  });
+});

@@ -16,6 +16,7 @@ export const WIDGET_TYPES = [
   "FREE_SHIPPING_BAR",
   "TRUST_BADGES",
   "CART_GOAL",
+  "COUNTDOWN",
 ] as const;
 
 export type WidgetType = (typeof WIDGET_TYPES)[number];
@@ -27,6 +28,7 @@ export const STOREFRONT_KEY: Record<WidgetType, string> = {
   FREE_SHIPPING_BAR: "free-shipping-bar",
   TRUST_BADGES: "trust-badges",
   CART_GOAL: "cart-goal",
+  COUNTDOWN: "countdown",
 };
 
 // ---------------------------------------------------------------------------
@@ -156,6 +158,24 @@ const DEFAULT_ANNOUNCEMENT_BAR: AnnouncementBarConfig = {
   countdownTo: null,
 };
 
+export type CountdownConfig = {
+  mode: "fixed" | "evergreen";
+  endAt: string | null; // fixed mode: ISO datetime
+  durationMinutes: number; // evergreen mode: per-visitor length
+  message: string; // supports the {{timer}} token
+  expiredMessage: string;
+  hideOnExpire: boolean;
+};
+
+const DEFAULT_COUNTDOWN: CountdownConfig = {
+  mode: "fixed",
+  endAt: null,
+  durationMinutes: 60,
+  message: "Hurry! Sale ends in {{timer}}",
+  expiredMessage: "This offer has ended",
+  hideOnExpire: false,
+};
+
 /** Widget-specific defaults keyed by type. */
 export const DEFAULT_WIDGET: Record<WidgetType, Record<string, unknown>> = {
   STICKY_ATC: { ...DEFAULT_STICKY_ATC },
@@ -163,6 +183,7 @@ export const DEFAULT_WIDGET: Record<WidgetType, Record<string, unknown>> = {
   FREE_SHIPPING_BAR: { ...DEFAULT_FREE_SHIPPING_BAR },
   TRUST_BADGES: { ...DEFAULT_TRUST_BADGES },
   CART_GOAL: { ...DEFAULT_CART_GOAL },
+  COUNTDOWN: { ...DEFAULT_COUNTDOWN },
 };
 
 export type WidgetConfig = {
@@ -341,12 +362,25 @@ function normalizeAnnouncementBar(raw: unknown): AnnouncementBarConfig {
   };
 }
 
+function normalizeCountdown(raw: unknown): CountdownConfig {
+  const r = obj(raw);
+  return {
+    mode: oneOf(r.mode, ["fixed", "evergreen"] as const, DEFAULT_COUNTDOWN.mode),
+    endAt: typeof r.endAt === "string" && r.endAt.length > 0 ? r.endAt : null,
+    durationMinutes: clampInt(r.durationMinutes, 1, 100000, DEFAULT_COUNTDOWN.durationMinutes),
+    message: str(r.message, DEFAULT_COUNTDOWN.message),
+    expiredMessage: str(r.expiredMessage, DEFAULT_COUNTDOWN.expiredMessage),
+    hideOnExpire: bool(r.hideOnExpire, DEFAULT_COUNTDOWN.hideOnExpire),
+  };
+}
+
 const WIDGET_NORMALIZERS: Partial<Record<WidgetType, (raw: unknown) => Record<string, unknown>>> = {
   STICKY_ATC: normalizeStickyAtc,
   FREE_SHIPPING_BAR: normalizeFreeShippingBar,
   CART_GOAL: normalizeCartGoal,
   TRUST_BADGES: normalizeTrustBadges,
   ANNOUNCEMENT_BAR: normalizeAnnouncementBar,
+  COUNTDOWN: normalizeCountdown,
 };
 
 /** Normalize a stored/submitted config for a widget type into a valid `{ global, widget }`. */

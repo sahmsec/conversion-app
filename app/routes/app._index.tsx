@@ -50,6 +50,11 @@ const WIDGET_META: Record<WidgetType, { name: string; description: string; route
     description: "Rotating announcements and countdowns.",
     route: "/app/widgets/announcement-bar",
   },
+  COUNTDOWN: {
+    name: "Countdown Timer",
+    description: "Urgency timer — to a sale date or a per-visitor countdown.",
+    route: "/app/widgets/countdown",
+  },
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
