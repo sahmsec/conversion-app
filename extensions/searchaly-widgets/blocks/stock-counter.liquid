@@ -1,0 +1,27 @@
+{%- comment -%}
+  Stock Counter — app BLOCK. Drag onto the product page (near price / buy button).
+  Shows live inventory from Liquid, only when it's at/below the threshold. Renders
+  nothing when stock is untracked, zero, or above the threshold.
+{%- endcomment -%}
+{%- liquid
+  assign v = product.selected_or_first_available_variant
+  assign qty = v.inventory_quantity
+-%}
+{%- if product and v.inventory_management != blank and qty > 0 and qty <= block.settings.threshold -%}
+  <div class="searchaly-stock" {{ block.shopify_attributes }}>
+    <span class="searchaly-stock__dot"></span>
+    <span>{{ block.settings.message | replace: '[count]', qty }}</span>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Stock Counter",
+  "target": "section",
+  "stylesheet": "searchaly.css",
+  "settings": [
+    { "type": "range", "id": "threshold", "label": "Show when stock is at or below", "min": 1, "max": 100, "step": 1, "default": 10, "unit": "left" },
+    { "type": "text", "id": "message", "label": "Message (use [count])", "default": "Hurry! Only [count] left in stock" }
+  ]
+}
+{% endschema %}
