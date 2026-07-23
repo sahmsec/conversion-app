@@ -61,6 +61,11 @@ const WIDGET_META: Record<WidgetType, { name: string; description: string; route
     description: "Real recent-order social proof — “Someone in Austin just bought…”.",
     route: "/app/widgets/sales-pop",
   },
+  QUANTITY_BREAKS: {
+    name: "Quantity Breaks",
+    description: "Volume discount — buy more, save more (auto-applied at checkout).",
+    route: "/app/widgets/quantity-breaks",
+  },
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {

@@ -483,3 +483,39 @@
     bottom: 12px;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Quantity Breaks (volume discount tier table on the product page)
+   --------------------------------------------------------------------------- */
+.searchaly-qb {
+  margin: 14px 0;
+}
+.searchaly-qb__heading {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1f2937;
+}
+.searchaly-qb__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.searchaly-qb__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 14px;
+}
+.searchaly-qb__qty {
+  font-weight: 600;
+  color: #1f2937;
+}
+.searchaly-qb__save {
+  font-weight: 700;
+  color: #374151;
+}

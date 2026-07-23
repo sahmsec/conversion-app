@@ -220,6 +220,42 @@ describe("normalizeConfig — Announcement Bar", () => {
   });
 });
 
+describe("normalizeConfig — Quantity Breaks", () => {
+  it("fills default tiers when none provided", () => {
+    const c = normalizeConfig("QUANTITY_BREAKS", {});
+    expect((c.widget.tiers as unknown[]).length).toBeGreaterThan(0);
+    expect(c.widget.discountId).toBe("");
+  });
+
+  it("clamps tier values and drops invalid ones", () => {
+    const c = normalizeConfig("QUANTITY_BREAKS", {
+      widget: {
+        tiers: [
+          { minQuantity: 3, percent: 15 },
+          { minQuantity: 0, percent: 200 }, // minQuantity clamped to 1 -> valid
+          { minQuantity: "x", percent: "y" }, // -> defaults 2 / 10 -> valid
+        ],
+      },
+    });
+    const tiers = c.widget.tiers as Array<{ minQuantity: number; percent: number }>;
+    expect(tiers[0]).toEqual({ minQuantity: 3, percent: 15 });
+    expect(tiers[1].percent).toBe(100); // clamped to max
+    expect(tiers.every((t) => t.minQuantity >= 1 && t.percent >= 1)).toBe(true);
+  });
+
+  it("keeps an explicitly empty tier list empty (merchant cleared it)", () => {
+    const c = normalizeConfig("QUANTITY_BREAKS", { widget: { tiers: [] } });
+    expect(c.widget.tiers).toEqual([]);
+  });
+
+  it("preserves a stored discount id", () => {
+    const c = normalizeConfig("QUANTITY_BREAKS", {
+      widget: { discountId: "gid://shopify/DiscountAutomaticNode/9" },
+    });
+    expect(c.widget.discountId).toBe("gid://shopify/DiscountAutomaticNode/9");
+  });
+});
+
 describe("normalizeConfig — Countdown", () => {
   it("fills defaults, clamps duration, keeps evergreen mode", () => {
     const c = normalizeConfig("COUNTDOWN", {

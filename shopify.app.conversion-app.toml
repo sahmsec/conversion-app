@@ -27,8 +27,8 @@ api_version = "2026-10"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-# read_orders powers the Sales Pop widget's real recent-order social proof.
-scopes = "read_orders"
+# read_orders powers Sales Pop; write_discounts powers Quantity Breaks (auto discount).
+scopes = "read_orders,write_discounts"
 
 [auth]
 redirect_urls = [

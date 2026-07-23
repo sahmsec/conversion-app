@@ -54,6 +54,7 @@ enum WidgetType {
   CART_GOAL
   COUNTDOWN
   SALES_POP
+  QUANTITY_BREAKS
 }
 
 /// Rolling recent orders for the Sales Pop widget (real social proof). Populated by

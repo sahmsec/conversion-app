@@ -18,6 +18,7 @@ export const WIDGET_TYPES = [
   "CART_GOAL",
   "COUNTDOWN",
   "SALES_POP",
+  "QUANTITY_BREAKS",
 ] as const;
 
 export type WidgetType = (typeof WIDGET_TYPES)[number];
@@ -31,6 +32,7 @@ export const STOREFRONT_KEY: Record<WidgetType, string> = {
   CART_GOAL: "cart-goal",
   COUNTDOWN: "countdown",
   SALES_POP: "sales-pop",
+  QUANTITY_BREAKS: "quantity-breaks",
 };
 
 // ---------------------------------------------------------------------------
@@ -219,6 +221,28 @@ const DEFAULT_SALES_POP: SalesPopConfig = {
   template: "Someone in {{location}} purchased {{product}}",
 };
 
+export type QuantityBreakTier = { minQuantity: number; percent: number };
+
+export type QuantityBreaksConfig = {
+  heading: string;
+  tiers: QuantityBreakTier[]; // minQuantity -> percent off (enforced at checkout by the discount function)
+  variantIds: string[]; // optional scoping to specific variant GIDs; empty = all products
+  highlightBest: boolean; // storefront table: emphasize the biggest saving
+  discountId: string; // internal — the managed automatic-discount GID (not user-facing)
+};
+
+const DEFAULT_QUANTITY_BREAKS: QuantityBreaksConfig = {
+  heading: "Buy more, save more",
+  tiers: [
+    { minQuantity: 2, percent: 10 },
+    { minQuantity: 4, percent: 15 },
+    { minQuantity: 6, percent: 20 },
+  ],
+  variantIds: [],
+  highlightBest: true,
+  discountId: "",
+};
+
 /** Widget-specific defaults keyed by type. */
 export const DEFAULT_WIDGET: Record<WidgetType, Record<string, unknown>> = {
   STICKY_ATC: { ...DEFAULT_STICKY_ATC },
@@ -228,6 +252,7 @@ export const DEFAULT_WIDGET: Record<WidgetType, Record<string, unknown>> = {
   CART_GOAL: { ...DEFAULT_CART_GOAL },
   COUNTDOWN: { ...DEFAULT_COUNTDOWN },
   SALES_POP: { ...DEFAULT_SALES_POP },
+  QUANTITY_BREAKS: { ...DEFAULT_QUANTITY_BREAKS },
 };
 
 export type WidgetConfig = {
@@ -431,6 +456,29 @@ function normalizeCountdown(raw: unknown): CountdownConfig {
   };
 }
 
+function normalizeQuantityBreaks(raw: unknown): QuantityBreaksConfig {
+  const r = obj(raw);
+  const tiers = Array.isArray(r.tiers)
+    ? r.tiers
+        .map((t) => {
+          const o = obj(t);
+          return {
+            minQuantity: clampInt(o.minQuantity, 1, 1000, 2),
+            percent: clampInt(o.percent, 1, 100, 10),
+          };
+        })
+        .filter((t) => t.minQuantity > 0 && t.percent > 0)
+        .slice(0, 10)
+    : DEFAULT_QUANTITY_BREAKS.tiers.map((t) => ({ ...t }));
+  return {
+    heading: str(r.heading, DEFAULT_QUANTITY_BREAKS.heading),
+    tiers,
+    variantIds: handleArray(r.variantIds),
+    highlightBest: bool(r.highlightBest, DEFAULT_QUANTITY_BREAKS.highlightBest),
+    discountId: typeof r.discountId === "string" ? r.discountId : "",
+  };
+}
+
 function normalizeSalesPop(raw: unknown): SalesPopConfig {
   const r = obj(raw);
   return {
@@ -452,6 +500,7 @@ const WIDGET_NORMALIZERS: Partial<Record<WidgetType, (raw: unknown) => Record<st
   ANNOUNCEMENT_BAR: normalizeAnnouncementBar,
   COUNTDOWN: normalizeCountdown,
   SALES_POP: normalizeSalesPop,
+  QUANTITY_BREAKS: normalizeQuantityBreaks,
 };
 
 /** Normalize a stored/submitted config for a widget type into a valid `{ global, widget }`. */
