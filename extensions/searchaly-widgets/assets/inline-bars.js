@@ -59,8 +59,9 @@
       return 1;
     }
   }
+  // Block settings can't contain {{ }} (theme-check), so inline blocks use [token].
   function fill(t, tokens) {
-    return String(t == null ? "" : t).replace(/\{\{\s*(\w+)\s*\}\}/g, function (m, k) {
+    return String(t == null ? "" : t).replace(/\[(\w+)\]/g, function (m, k) {
       return Object.prototype.hasOwnProperty.call(tokens, k) ? tokens[k] : m;
     });
   }
