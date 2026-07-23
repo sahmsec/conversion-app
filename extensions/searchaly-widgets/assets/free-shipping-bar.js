@@ -34,9 +34,14 @@
     document.body.appendChild(bar);
     S.stack(bar);
 
+    var goalTracked = false;
     function render(cart) {
       var total = cart ? Number(cart.total_price) || 0 : 0;
       var remaining = Math.max(0, goal - total);
+      if (remaining <= 0 && !goalTracked) {
+        goalTracked = true;
+        S.track("free-shipping-bar", "goal");
+      }
       text.textContent =
         remaining <= 0
           ? cfg.messageAfter

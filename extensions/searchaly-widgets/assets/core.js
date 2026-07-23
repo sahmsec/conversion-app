@@ -288,6 +288,44 @@
     );
   }
 
+  // --- Analytics -----------------------------------------------------------
+  var eventQueue = [];
+  var flushTimer = null;
+  function flush() {
+    if (flushTimer) {
+      clearTimeout(flushTimer);
+      flushTimer = null;
+    }
+    if (!eventQueue.length) return;
+    var body = JSON.stringify(eventQueue);
+    eventQueue = [];
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(
+          "/apps/searchaly/events",
+          new Blob([body], { type: "application/json" }),
+        );
+      } else {
+        fetch("/apps/searchaly/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: body,
+          keepalive: true,
+        });
+      }
+    } catch (e) {
+      /* analytics is best-effort */
+    }
+  }
+  function track(key, event) {
+    eventQueue.push({ widget: key, event: event });
+    if (!flushTimer) flushTimer = setTimeout(flush, 3000);
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") flush();
+  });
+  window.addEventListener("pagehide", flush);
+
   // --- Registry ------------------------------------------------------------
   var registry = {};
   var Searchaly = {
@@ -299,6 +337,7 @@
     getCart: getCart,
     fill: fill,
     stack: stack,
+    track: track,
     register: function (key, initFn) {
       registry[key] = initFn;
       var cfg = widgets[key];
@@ -306,6 +345,7 @@
       if (!allowed(cfg.global)) return;
       try {
         initFn(cfg);
+        track(key, "impression");
       } catch (e) {
         if (window.console && window.console.error) {
           window.console.error("[Searchaly] " + key + " failed", e);

@@ -232,10 +232,12 @@
     }
 
     cta.addEventListener("click", function () {
+      S.track("sticky-cart", "click");
       addToCart("cart", cta);
     });
     if (buyNow) {
       buyNow.addEventListener("click", function () {
+        S.track("sticky-cart", "click");
         addToCart("checkout", buyNow);
       });
     }

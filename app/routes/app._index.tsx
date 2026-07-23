@@ -16,13 +16,14 @@ import { TitleBar } from "@shopify/app-bridge-react";
 
 import { authenticate } from "../shopify.server";
 import { listWidgets } from "../models/widget.server";
+import { getStats } from "../models/stats.server";
 import {
   conversionScore,
   scoreLabel,
   scoreTone,
   storeHealthScore,
 } from "../lib/scores";
-import type { WidgetType } from "../lib/widget-config";
+import { STOREFRONT_KEY, type WidgetType } from "../lib/widget-config";
 
 const WIDGET_META: Record<WidgetType, { name: string; description: string; route: string }> = {
   STICKY_ATC: {
@@ -59,13 +60,16 @@ const WIDGET_META: Record<WidgetType, { name: string; description: string; route
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
-  const widgets = await listWidgets(session.shop);
+  const [widgets, stats] = await Promise.all([
+    listWidgets(session.shop),
+    getStats(session.shop),
+  ]);
   const themeEditorUrl = `https://${session.shop}/admin/themes/current/editor?context=apps`;
-  return { widgets, themeEditorUrl };
+  return { widgets, themeEditorUrl, stats };
 };
 
 export default function Dashboard() {
-  const { widgets, themeEditorUrl } = useLoaderData<typeof loader>();
+  const { widgets, themeEditorUrl, stats } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
 
   const statuses = widgets.map((w) => ({ type: w.type, enabled: w.enabled }));
@@ -151,6 +155,58 @@ export default function Dashboard() {
                 );
               })}
             </BlockStack>
+          </BlockStack>
+        </Card>
+
+        {/* Analytics */}
+        <Card>
+          <BlockStack gap="400">
+            <Text as="h2" variant="headingMd">
+              Analytics · last 30 days
+            </Text>
+            <BlockStack gap="200">
+              <InlineGrid columns={4} gap="200">
+                <Text as="span" variant="bodySm" tone="subdued">
+                  Widget
+                </Text>
+                <Text as="span" variant="bodySm" tone="subdued" alignment="end">
+                  Views
+                </Text>
+                <Text as="span" variant="bodySm" tone="subdued" alignment="end">
+                  Clicks
+                </Text>
+                <Text as="span" variant="bodySm" tone="subdued" alignment="end">
+                  Goals
+                </Text>
+              </InlineGrid>
+              {widgets.map((w) => {
+                const s = stats[STOREFRONT_KEY[w.type]] || {
+                  impression: 0,
+                  click: 0,
+                  goal: 0,
+                };
+                return (
+                  <InlineGrid key={w.type} columns={4} gap="200">
+                    <Text as="span" variant="bodyMd">
+                      {WIDGET_META[w.type].name}
+                    </Text>
+                    <Text as="span" variant="bodyMd" alignment="end">
+                      {s.impression.toLocaleString()}
+                    </Text>
+                    <Text as="span" variant="bodyMd" alignment="end">
+                      {s.click ? s.click.toLocaleString() : "—"}
+                    </Text>
+                    <Text as="span" variant="bodyMd" alignment="end">
+                      {s.goal ? s.goal.toLocaleString() : "—"}
+                    </Text>
+                  </InlineGrid>
+                );
+              })}
+            </BlockStack>
+            <Text as="p" variant="bodySm" tone="subdued">
+              Views = times shown to shoppers. Clicks and Goals are tracked where they
+              apply (sticky-cart clicks; free-shipping / cart-goal reached).
+            </Text>
           </BlockStack>
         </Card>
       </BlockStack>

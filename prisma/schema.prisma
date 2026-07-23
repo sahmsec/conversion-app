@@ -54,3 +54,18 @@ enum WidgetType {
   CART_GOAL
   COUNTDOWN
 }
+
+/// Aggregated per-day widget analytics (impressions / clicks / goals). One row per
+/// shop + widget + event + day, incremented as batched events arrive.
+model WidgetStat {
+  id        String   @id @default(cuid())
+  shop      String
+  widget    String // storefront key, e.g. "sticky-cart"
+  event     String // "impression" | "click" | "goal"
+  day       String // UTC date, "YYYY-MM-DD"
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([shop, widget, event, day])
+  @@index([shop])
+}

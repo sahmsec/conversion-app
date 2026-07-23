@@ -34,3 +34,8 @@ redirect_urls = [
 
 [build]
 automatically_update_urls_on_dev = true
+
+[app_proxy]
+url = "https://conversion-app-h6uq.onrender.com/proxy"
+subpath = "searchaly"
+prefix = "apps"
