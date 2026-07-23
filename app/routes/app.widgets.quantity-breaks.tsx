@@ -79,13 +79,24 @@ export const action = async ({ request }: ActionFunctionArgs): Promise<WidgetAct
     discountId: cfg.discountId,
   });
   if (disc.discountId !== cfg.discountId) {
-    persisted = await upsertWidget(shop, "QUANTITY_BREAKS", {
-      enabled: persisted.enabled,
-      config: {
-        global: persisted.config.global,
-        widget: { ...cfg, discountId: disc.discountId },
-      },
-    });
+    try {
+      persisted = await upsertWidget(shop, "QUANTITY_BREAKS", {
+        enabled: persisted.enabled,
+        config: {
+          global: persisted.config.global,
+          widget: { ...cfg, discountId: disc.discountId },
+        },
+      });
+    } catch {
+      // The discount change succeeded but recording its id failed; a retry is safe
+      // (create is idempotent — it reuses the existing discount by title).
+      return {
+        ok: false,
+        synced: false,
+        error: "Saved the discount, but couldn't record it. Please save once more.",
+        widget: persisted,
+      };
+    }
   }
 
   const sync = await syncStorefrontConfig(admin, shop);

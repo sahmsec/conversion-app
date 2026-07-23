@@ -575,7 +575,10 @@ export function buildStorefrontConfig(
   for (const row of rows) {
     if (!row.enabled) continue;
     const cfg = normalizeConfig(row.type, row.config);
-    widgets[STOREFRONT_KEY[row.type]] = { global: cfg.global, ...cfg.widget };
+    // Never expose internal, admin-only fields to the public storefront payload.
+    const widget: Record<string, unknown> = { ...cfg.widget };
+    delete widget.discountId;
+    widgets[STOREFRONT_KEY[row.type]] = { global: cfg.global, ...widget };
   }
   return { v: 1, widgets };
 }

@@ -59,6 +59,16 @@ const DELETE = `#graphql
     }
   }`;
 
+const FIND_EXISTING = `#graphql
+  query SearchalyFindDiscount {
+    discountNodes(first: 50, query: "method:automatic") {
+      nodes {
+        id
+        discount { ... on DiscountAutomaticApp { title } }
+      }
+    }
+  }`;
+
 /** Resolve THIS app's discount-function id (gid://shopify/AppFunction/...). */
 async function resolveFunctionId(admin: AdminGraphqlClient): Promise<string | null> {
   const resp = await admin.graphql(SHOPIFY_FUNCTIONS);
@@ -69,6 +79,25 @@ async function resolveFunctionId(admin: AdminGraphqlClient): Promise<string | nu
   // Our app owns only its own functions; prefer the discount one.
   const discountFn = nodes.find((n) => n.apiType === "discount") ?? nodes[0];
   return discountFn?.id ?? null;
+}
+
+/** Find an existing automatic discount created by this widget (by title), if any. */
+async function findExistingDiscountId(admin: AdminGraphqlClient): Promise<string | null> {
+  try {
+    const resp = await admin.graphql(FIND_EXISTING);
+    const json = (await resp.json()) as {
+      data?: {
+        discountNodes?: {
+          nodes?: Array<{ id: string; discount?: { title?: string } }>;
+        };
+      };
+    };
+    const nodes = json?.data?.discountNodes?.nodes ?? [];
+    const match = nodes.find((n) => n.discount?.title === DISCOUNT_TITLE);
+    return match?.id ?? null;
+  } catch {
+    return null; // best-effort — fall through to create
+  }
 }
 
 function configValue(tiers: QuantityBreakTier[], variantIds: string[]): string {
@@ -105,14 +134,26 @@ export async function syncQuantityBreaksDiscount(
       if (discountId) {
         const resp = await admin.graphql(DELETE, { variables: { id: discountId } });
         const json = (await resp.json()) as {
-          data?: { discountAutomaticDelete?: { userErrors?: Array<{ message: string }> } };
+          data?: {
+            discountAutomaticDelete?: {
+              deletedAutomaticDiscountId?: string | null;
+              userErrors?: Array<{ message: string }>;
+            };
+          };
           errors?: Array<{ message?: string }>;
         };
         const top = topLevelError(json);
         const ue = json?.data?.discountAutomaticDelete?.userErrors ?? [];
-        // If it's already gone, treat as success.
+        const deletedId = json?.data?.discountAutomaticDelete?.deletedAutomaticDiscountId;
+        if (deletedId) return { ok: true, discountId: "", error: null };
         if (top || ue.length > 0) {
-          return { ok: false, discountId: "", error: top || ue.map((e) => e.message).join("; ") };
+          const msg = top || ue.map((e) => e.message).join("; ");
+          // "Not found" == already gone → safe to clear. Any other failure means the
+          // discount may still be LIVE, so PRESERVE the handle (never orphan it).
+          if (/not\s*found|does\s*n[o']?t\s*exist|no\s*longer\s*exist/i.test(msg)) {
+            return { ok: true, discountId: "", error: null };
+          }
+          return { ok: false, discountId, error: msg };
         }
       }
       return { ok: true, discountId: "", error: null };
@@ -147,7 +188,37 @@ export async function syncQuantityBreaksDiscount(
       return { ok: true, discountId, error: null };
     }
 
-    // First activation → create the automatic discount with the tier metafield inline.
+    // First activation → but first check for an existing discount we lost the handle
+    // to (e.g. a prior save persisted the create but a later step failed). Reusing it
+    // keeps the create idempotent so we never stack two volume discounts.
+    const existingId = await findExistingDiscountId(admin);
+    if (existingId) {
+      const resp = await admin.graphql(METAFIELDS_SET, {
+        variables: {
+          metafields: [
+            {
+              ownerId: existingId,
+              namespace: FN_METAFIELD_NAMESPACE,
+              key: FN_METAFIELD_KEY,
+              type: "json",
+              value,
+            },
+          ],
+        },
+      });
+      const json = (await resp.json()) as {
+        data?: { metafieldsSet?: { userErrors?: Array<{ message: string }> } };
+        errors?: Array<{ message?: string }>;
+      };
+      const top = topLevelError(json);
+      const ue = json?.data?.metafieldsSet?.userErrors ?? [];
+      if (top || ue.length > 0) {
+        return { ok: false, discountId: existingId, error: top || ue.map((e) => e.message).join("; ") };
+      }
+      return { ok: true, discountId: existingId, error: null };
+    }
+
+    // Create the automatic discount with the tier metafield inline.
     const functionId = await resolveFunctionId(admin);
     if (!functionId) {
       return {

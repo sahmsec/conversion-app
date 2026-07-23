@@ -127,7 +127,10 @@
           headers: { "Content-Type": "application/json", Accept: "application/json" },
           body: JSON.stringify({ items: [{ id: v.id, quantity: 1 }] }),
         })
-          .then(function () {
+          .then(function (r) {
+            // /cart/add.js returns 422 (e.g. sold out) without rejecting the promise,
+            // so gate on the status — never claim "Added" for a failed add.
+            if (!r.ok) throw new Error("add-to-cart failed");
             btn.textContent = "Added ✓";
             setTimeout(function () {
               btn.disabled = false;
@@ -135,7 +138,11 @@
             }, 1500);
           })
           .catch(function () {
-            btn.disabled = false;
+            btn.textContent = "Unavailable";
+            setTimeout(function () {
+              btn.disabled = false;
+              btn.textContent = label;
+            }, 1800);
           });
       });
       card.appendChild(btn);

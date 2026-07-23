@@ -153,6 +153,20 @@ describe("buildStorefrontConfig", () => {
     expect(payload.widgets["sticky-cart"].global).toBeDefined();
   });
 
+  it("never leaks the internal quantity-breaks discountId to the storefront", () => {
+    const payload = buildStorefrontConfig([
+      {
+        type: "QUANTITY_BREAKS",
+        enabled: true,
+        config: { widget: { discountId: "gid://shopify/DiscountAutomaticNode/9" } },
+      },
+    ]);
+    const w = payload.widgets["quantity-breaks"];
+    expect(w).toBeDefined();
+    expect("discountId" in w).toBe(false);
+    expect(Array.isArray(w.tiers)).toBe(true); // real config still present
+  });
+
   it("returns an empty widget map when nothing is enabled", () => {
     const payload = buildStorefrontConfig([
       { type: "STICKY_ATC", enabled: false, config: {} },

@@ -7,13 +7,15 @@ function mockAdmin(responses: {
   create?: unknown;
   metafields?: unknown;
   del?: unknown;
+  existing?: unknown;
 }) {
   const graphql = vi.fn(async (query: string) => {
     let data: unknown = {};
-    if (query.includes("shopifyFunctions")) data = responses.functions;
+    if (query.includes("discountAutomaticDelete")) data = responses.del;
+    else if (query.includes("discountNodes")) data = responses.existing ?? { data: { discountNodes: { nodes: [] } } };
+    else if (query.includes("shopifyFunctions")) data = responses.functions;
     else if (query.includes("discountAutomaticAppCreate")) data = responses.create;
     else if (query.includes("metafieldsSet")) data = responses.metafields;
-    else if (query.includes("discountAutomaticDelete")) data = responses.del;
     return { json: async () => data } as unknown as Response;
   });
   return { admin: { graphql }, graphql };
@@ -42,8 +44,72 @@ describe("syncQuantityBreaksDiscount", () => {
     });
     expect(r.ok).toBe(true);
     expect(r.discountId).toBe("gid://shopify/DiscountAutomaticNode/9");
-    // resolved function + created
+    // checked for an existing discount, resolved the function, then created
+    expect(graphql).toHaveBeenCalledTimes(3);
+  });
+
+  it("reuses an existing discount instead of creating a duplicate (idempotent)", async () => {
+    const { admin, graphql } = mockAdmin({
+      existing: {
+        data: {
+          discountNodes: {
+            nodes: [
+              { id: "gid://shopify/DiscountAutomaticNode/42", discount: { title: "Quantity Breaks — Conversion App" } },
+            ],
+          },
+        },
+      },
+      metafields: { data: { metafieldsSet: { userErrors: [] } } },
+    });
+    const r = await syncQuantityBreaksDiscount(admin, {
+      enabled: true,
+      tiers: TIERS,
+      variantIds: [],
+      discountId: "", // lost handle
+    });
+    expect(r.ok).toBe(true);
+    expect(r.discountId).toBe("gid://shopify/DiscountAutomaticNode/42");
+    // found existing + refreshed its metafield — NO create
     expect(graphql).toHaveBeenCalledTimes(2);
+    expect(graphql.mock.calls.some((c) => c[0].includes("discountAutomaticAppCreate"))).toBe(false);
+  });
+
+  it("preserves the discount id when a non-'not found' delete fails", async () => {
+    const { admin } = mockAdmin({
+      del: {
+        data: { discountAutomaticDelete: { deletedAutomaticDiscountId: null, userErrors: [] } },
+        errors: [{ message: "Throttled" }],
+      },
+    });
+    const r = await syncQuantityBreaksDiscount(admin, {
+      enabled: false,
+      tiers: TIERS,
+      variantIds: [],
+      discountId: "gid://shopify/DiscountAutomaticNode/9",
+    });
+    expect(r.ok).toBe(false);
+    expect(r.discountId).toBe("gid://shopify/DiscountAutomaticNode/9"); // handle preserved
+  });
+
+  it("clears the id when the discount is already gone (not found)", async () => {
+    const { admin } = mockAdmin({
+      del: {
+        data: {
+          discountAutomaticDelete: {
+            deletedAutomaticDiscountId: null,
+            userErrors: [{ message: "Discount not found" }],
+          },
+        },
+      },
+    });
+    const r = await syncQuantityBreaksDiscount(admin, {
+      enabled: false,
+      tiers: TIERS,
+      variantIds: [],
+      discountId: "gid://shopify/DiscountAutomaticNode/9",
+    });
+    expect(r.ok).toBe(true);
+    expect(r.discountId).toBe("");
   });
 
   it("updates the tier metafield when a discount already exists", async () => {
