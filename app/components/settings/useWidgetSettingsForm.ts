@@ -4,7 +4,15 @@ import { useAppBridge } from "@shopify/app-bridge-react";
 import type { GlobalWidgetSettings } from "../../lib/widget-config";
 import type { WidgetFormBanner } from "./WidgetSettingsForm";
 
-type ActionData = { ok: boolean; synced: boolean; error: string | null };
+type ActionData = {
+  ok: boolean;
+  synced: boolean;
+  error: string | null;
+  widget: {
+    enabled: boolean;
+    config: { global: GlobalWidgetSettings; widget: Record<string, unknown> };
+  } | null;
+};
 
 export type WidgetFormInitial<W> = {
   enabled: boolean;
@@ -13,10 +21,12 @@ export type WidgetFormInitial<W> = {
 };
 
 /**
- * Shared state + save behavior for every widget settings screen. Tracks the
- * enable flag, global settings, and the widget-specific config; computes a dirty
- * flag; submits `{ enabled, config: { global, widget } }` to the route action; and
- * surfaces a success/warning/critical banner from the sync result.
+ * Shared state + save behavior for every widget settings screen.
+ *  - save(): full save of enabled + config. On success the form + baseline adopt
+ *    the server's PERSISTED (normalized) values, so the UI never claims a value it
+ *    didn't actually store.
+ *  - toggleEnabled(): patches only the enable flag (never commits config drafts or
+ *    clobbers saved config).
  */
 export function useWidgetSettingsForm<W>(initial: WidgetFormInitial<W>) {
   const fetcher = useFetcher<ActionData>();
@@ -32,48 +42,63 @@ export function useWidgetSettingsForm<W>(initial: WidgetFormInitial<W>) {
   const dirty =
     JSON.stringify({ enabled, global, widget }) !== JSON.stringify(baseline);
 
-  // Snapshot of exactly what was submitted, so the baseline reflects the payload
-  // that was sent — not any edits the merchant made while the save was in flight.
-  const submittedRef = useRef(initial);
+  const lastIntentRef = useRef<"save" | "toggle">("save");
+  const toggledEnabledRef = useRef(initial.enabled);
+
   const save = useCallback(() => {
-    submittedRef.current = { enabled, global, widget };
+    lastIntentRef.current = "save";
     fetcher.submit(
-      { payload: JSON.stringify({ enabled, config: { global, widget } }) },
+      { payload: JSON.stringify({ intent: "save", enabled, config: { global, widget } }) },
       { method: "POST" },
     );
   }, [enabled, global, widget, fetcher]);
 
-  // An on/off toggle must take effect immediately — merchants don't expect to
-  // press Save to turn a widget on. Persist right away with the current config.
+  // On/off toggle persists the enable flag ALONE — immediately, no separate Save,
+  // and without touching the config the merchant may be mid-editing.
   const toggleEnabled = useCallback(
     (next: boolean) => {
+      lastIntentRef.current = "toggle";
+      toggledEnabledRef.current = next;
       setEnabled(next);
-      submittedRef.current = { enabled: next, global, widget };
       fetcher.submit(
-        { payload: JSON.stringify({ enabled: next, config: { global, widget } }) },
+        { payload: JSON.stringify({ intent: "toggle", enabled: next }) },
         { method: "POST" },
       );
     },
-    [global, widget, fetcher],
+    [fetcher],
   );
 
   useEffect(() => {
     if (fetcher.state !== "idle" || !fetcher.data) return;
-    if (fetcher.data.ok && fetcher.data.synced) {
-      // Baseline = what was actually submitted; edits made mid-save stay dirty.
-      setBaseline(submittedRef.current);
-      setBanner({ tone: "success", content: "Saved and published to your storefront." });
-      shopify.toast.show("Saved");
-    } else if (fetcher.data.ok) {
-      // DB saved but the storefront publish failed. Do NOT reset the baseline: keep
-      // the form dirty so the Save button stays enabled for the "Save again" retry.
-      setBanner({
-        tone: "warning",
-        content:
-          "Saved, but publishing to the storefront failed. Press Save again to retry.",
-      });
+    const data = fetcher.data;
+
+    if (data.ok) {
+      if (lastIntentRef.current === "save" && data.widget) {
+        // Adopt what the server actually persisted (post-normalization).
+        const w = data.widget;
+        const g = w.config.global;
+        const ws = w.config.widget as unknown as W;
+        setEnabled(w.enabled);
+        setGlobal(g);
+        setWidget(ws);
+        setBaseline({ enabled: w.enabled, global: g, widget: ws });
+      } else {
+        // Toggle only changed the enable flag; keep config state/drafts intact.
+        setBaseline((b) => ({ ...b, enabled: toggledEnabledRef.current }));
+      }
+
+      if (data.synced) {
+        setBanner({ tone: "success", content: "Saved and published to your storefront." });
+        shopify.toast.show("Saved");
+      } else {
+        setBanner({
+          tone: "warning",
+          content:
+            "Saved, but publishing to the storefront failed. Press Save again to retry.",
+        });
+      }
     } else {
-      setBanner({ tone: "critical", content: "Could not save. Please try again." });
+      setBanner({ tone: "critical", content: data.error || "Could not save. Please try again." });
     }
     // React only to a completed submission.
     // eslint-disable-next-line react-hooks/exhaustive-deps

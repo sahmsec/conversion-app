@@ -24,9 +24,9 @@ type AdminGraphqlClient = {
 
 export type SyncResult = { ok: true } | { ok: false; error: string };
 
-const SHOP_ID_QUERY = `#graphql
-  query SearchalyShopId {
-    shop { id }
+const SHOP_QUERY = `#graphql
+  query SearchalyShop {
+    shop { id ianaTimezone }
   }`;
 
 const METAFIELDS_SET = `#graphql
@@ -48,16 +48,18 @@ export async function syncStorefrontConfig(
   try {
     const payload = await getStorefrontConfig(shop);
 
-    // Resolve the shop GID required as the metafield owner.
-    const shopResp = await admin.graphql(SHOP_ID_QUERY);
+    // Resolve the shop GID (metafield owner) + timezone (for correct scheduling).
+    const shopResp = await admin.graphql(SHOP_QUERY);
     const shopJson = (await shopResp.json()) as {
-      data?: { shop?: { id?: string } };
+      data?: { shop?: { id?: string; ianaTimezone?: string } };
     };
     const ownerId = shopJson?.data?.shop?.id;
+    const tz = shopJson?.data?.shop?.ianaTimezone;
     if (!ownerId) {
       return { ok: false, error: "Could not resolve shop id" };
     }
 
+    const value = JSON.stringify(tz ? { ...payload, tz } : payload);
     const resp = await admin.graphql(METAFIELDS_SET, {
       variables: {
         metafields: [
@@ -66,7 +68,7 @@ export async function syncStorefrontConfig(
             namespace: METAFIELD_NAMESPACE,
             key: METAFIELD_KEY,
             type: "json",
-            value: JSON.stringify(payload),
+            value,
           },
         ],
       },
@@ -78,7 +80,13 @@ export async function syncStorefrontConfig(
           userErrors?: Array<{ field?: string[]; message: string; code?: string }>;
         };
       };
+      errors?: Array<{ message?: string }>;
     };
+    // Top-level GraphQL errors (HTTP 200 with an `errors` array, `data` null).
+    if (json?.errors && json.errors.length > 0) {
+      const msg = json.errors.map((e) => e?.message).filter(Boolean).join("; ");
+      return { ok: false, error: msg || "GraphQL error" };
+    }
     const errors = json?.data?.metafieldsSet?.userErrors ?? [];
     if (errors.length > 0) {
       return { ok: false, error: errors.map((e) => e.message).join("; ") };

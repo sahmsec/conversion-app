@@ -1,7 +1,7 @@
 /*
  * Searchaly Boost — Cart Goal.
  * Like the Free Shipping Bar, but framed around unlocking a reward.
- * Re-renders when the cart changes (via the searchaly:cart-updated event).
+ * Re-renders on cart changes; converts the goal to the visitor's currency.
  */
 (function () {
   "use strict";
@@ -10,7 +10,7 @@
   window.Searchaly.register("cart-goal", function (cfg) {
     var S = window.Searchaly;
     var global = cfg.global || {};
-    var goal = Number(cfg.goalCents) || 0;
+    var goal = S.toPresentment(Number(cfg.goalCents) || 0);
 
     var bar = document.createElement("div");
     bar.className = "searchaly-bar searchaly-bar--cart-goal";
@@ -31,6 +31,7 @@
     }
 
     document.body.appendChild(bar);
+    S.stack(bar);
 
     function render(cart) {
       var total = cart ? Number(cart.total_price) || 0 : 0;

@@ -1,0 +1,36 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "fcc5397acc59f296fc0dedf5e5809ee1"
+name = "Conversion App"
+application_url = "https://conversion-app-h6uq.onrender.com"
+embedded = true
+
+[webhooks]
+api_version = "2026-10"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+  [webhooks.privacy_compliance]
+  customer_data_request_url = "/webhooks/customers/data_request"
+  customer_deletion_url = "/webhooks/customers/redact"
+  shop_deletion_url = "/webhooks/shop/redact"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = ""
+
+[auth]
+redirect_urls = [
+  "https://conversion-app-h6uq.onrender.com/auth/callback",
+  "https://conversion-app-h6uq.onrender.com/auth/shopify/callback",
+  "https://conversion-app-h6uq.onrender.com/api/auth/callback"
+]
+
+[build]
+automatically_update_urls_on_dev = true

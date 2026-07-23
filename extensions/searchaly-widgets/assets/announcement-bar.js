@@ -1,6 +1,8 @@
 /*
  * Searchaly Boost — Announcement Bar.
  * Rotating messages, optional link, optional live countdown, optional dismiss.
+ * The dismiss state is keyed to the announcement's CONTENT, so publishing a new
+ * message re-shows the bar even to shoppers who dismissed the previous one.
  */
 (function () {
   "use strict";
@@ -9,10 +11,13 @@
   function pad(n) {
     return (n < 10 ? "0" : "") + n;
   }
-
-  // Only allow http(s) or root-relative links (blocks javascript:/data: URLs).
   function isSafeUrl(u) {
     return typeof u === "string" && (/^https?:\/\//i.test(u) || u.charAt(0) === "/");
+  }
+  function hashStr(s) {
+    var h = 5381;
+    for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+    return h.toString(36);
   }
 
   window.Searchaly.register("announcement-bar", function (cfg) {
@@ -23,7 +28,9 @@
     });
     if (!messages.length) return;
 
-    var DISMISS_KEY = "searchaly-announcement-dismissed";
+    var DISMISS_KEY =
+      "searchaly-announcement-dismissed-" +
+      hashStr(JSON.stringify({ m: messages, c: cfg.countdownTo || "", l: cfg.link || "" }));
     try {
       if (cfg.dismissible && sessionStorage.getItem(DISMISS_KEY) === "1") return;
     } catch (e) {
@@ -38,7 +45,6 @@
     inner.className = "searchaly-bar__text";
     bar.appendChild(inner);
 
-    // Optional countdown element (reused across message rotations).
     var countdownEl = null;
     if (cfg.countdownTo) {
       countdownEl = document.createElement("span");
@@ -105,6 +111,7 @@
     }
 
     document.body.appendChild(bar);
+    S.stack(bar);
     requestAnimationFrame(function () {
       bar.classList.add("is-visible");
     });

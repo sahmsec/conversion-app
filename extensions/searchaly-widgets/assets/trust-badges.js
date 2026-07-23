@@ -1,7 +1,7 @@
 /*
  * Searchaly Boost — Trust Badges.
- * Injects a row of payment/security badges into the product form, near the buy
- * button. Product pages only; renders nothing elsewhere.
+ * Injects a row of payment/security badges just below the product's buy button.
+ * Product pages only; renders nothing elsewhere.
  */
 (function () {
   "use strict";
@@ -18,9 +18,23 @@
     moneyback: { label: "↩ Money-back", color: "#7a1f1f" },
   };
 
+  var NOISE =
+    '[data-recommend],[data-recommendations],.recommendations,.product-recommendations,' +
+    '[id*="recommend"],.related-products,[data-recently-viewed],[id*="recently-viewed"],' +
+    'quick-add-modal,.quick-add,.card-wrapper';
+
+  function findProductForm() {
+    var forms = document.querySelectorAll('form[action*="/cart/add"]');
+    if (!forms.length) return null;
+    for (var i = 0; i < forms.length; i++) {
+      if (!forms[i].closest(NOISE)) return forms[i];
+    }
+    return forms[0];
+  }
+
   window.Searchaly.register("trust-badges", function (cfg) {
     if (!/\/products\/[^/?#]+/.test(window.location.pathname)) return;
-    var form = document.querySelector('form[action*="/cart/add"]');
+    var form = findProductForm();
     if (!form) return;
 
     var badges = cfg.badges || [];
@@ -48,6 +62,15 @@
       row.appendChild(chip);
     }
     wrap.appendChild(row);
-    form.appendChild(wrap);
+
+    // Place right after the buy button / buy-buttons block, else at the form end.
+    var anchor = form.querySelector(
+      '.product-form__buttons,.product-form__submit,[type="submit"],[name="add"]',
+    );
+    if (anchor && anchor.parentNode) {
+      anchor.parentNode.insertBefore(wrap, anchor.nextSibling);
+    } else {
+      form.appendChild(wrap);
+    }
   });
 })();

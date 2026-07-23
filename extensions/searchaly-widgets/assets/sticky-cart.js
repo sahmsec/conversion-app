@@ -2,32 +2,66 @@
  * Searchaly Boost — Sticky Add to Cart widget.
  *
  * Renders a fixed bar mirroring the product page's variant + quantity and posts to
- * the storefront Cart AJAX API. Theme-agnostic: reads the selected variant from the
- * product form's `[name="id"]` and fetches `/products/{handle}.js` for title/price.
- * Fails safe — off product pages or without a product form, it renders nothing.
+ * the storefront Cart AJAX API. Product pages only; renders nothing elsewhere.
  */
 (function () {
   "use strict";
   if (!window.Searchaly) return;
 
+  // Containers that hold OTHER products' add-to-cart forms (recommendations, etc.).
+  var NOISE =
+    '[data-recommend],[data-recommendations],.recommendations,.product-recommendations,' +
+    '[id*="recommend"],.related-products,[data-recently-viewed],[id*="recently-viewed"],' +
+    'quick-add-modal,.quick-add,.card-wrapper';
+
+  // Pick the MAIN product form, not the first /cart/add form on the page.
+  function findProductForm() {
+    var forms = document.querySelectorAll('form[action*="/cart/add"]');
+    if (!forms.length) return null;
+    if (forms.length === 1) return forms[0];
+    var candidates = [];
+    for (var i = 0; i < forms.length; i++) {
+      if (!forms[i].closest(NOISE)) candidates.push(forms[i]);
+    }
+    var pool = candidates.length ? candidates : [forms[0]];
+    // Prefer a form that lives in the main product section.
+    for (var j = 0; j < pool.length; j++) {
+      if (
+        pool[j].closest('product-info,[id*="product-form"],[data-section-type="product"],main')
+      ) {
+        return pool[j];
+      }
+    }
+    return pool[0];
+  }
+
   window.Searchaly.register("sticky-cart", function (cfg) {
+    var S = window.Searchaly;
     var global = cfg.global || {};
 
-    // Product pages only.
-    var handleMatch = window.location.pathname.match(/\/products\/([^\/?#]+)/);
-    if (!handleMatch) return;
-
-    var form = document.querySelector('form[action*="/cart/add"]');
+    if (!/\/products\/[^/?#]+/.test(window.location.pathname)) return;
+    var handleMatch = window.location.pathname.match(/\/products\/([^/?#]+)/);
+    var form = findProductForm();
     if (!form) return;
 
     var idInput = form.querySelector('[name="id"]');
     var product = null;
     var quantity = 1;
+    var submitting = false;
 
-    // --- Build the bar -----------------------------------------------------
+    // --- DOM ---------------------------------------------------------------
     var bar = document.createElement("div");
     bar.className = "searchaly-sticky";
-    window.Searchaly.applyTheme(bar, global);
+    S.applyTheme(bar, global);
+
+    var errorEl = document.createElement("div");
+    errorEl.className = "searchaly-sticky__error";
+    errorEl.style.display = "none";
+    bar.appendChild(errorEl);
+
+    var row = document.createElement("div");
+    row.className = "searchaly-sticky__row";
+    bar.appendChild(row);
 
     var info = document.createElement("div");
     info.className = "searchaly-sticky__info";
@@ -38,20 +72,19 @@
     priceEl.className = "searchaly-sticky__price";
     info.appendChild(titleEl);
     info.appendChild(priceEl);
-    bar.appendChild(info);
+    row.appendChild(info);
 
-    var qtyWrap = null;
     var qtyValue = null;
     if (cfg.showQuantity) {
-      qtyWrap = document.createElement("div");
+      var qtyWrap = document.createElement("div");
       qtyWrap.className = "searchaly-sticky__qty";
-      var dec = button("−");
+      var dec = mkBtn("−");
       qtyValue = document.createElement("input");
       qtyValue.type = "number";
       qtyValue.min = "1";
       qtyValue.value = "1";
       qtyValue.setAttribute("aria-label", "Quantity");
-      var inc = button("+");
+      var inc = mkBtn("+");
       dec.addEventListener("click", function () {
         quantity = Math.max(1, quantity - 1);
         qtyValue.value = String(quantity);
@@ -67,14 +100,14 @@
       qtyWrap.appendChild(dec);
       qtyWrap.appendChild(qtyValue);
       qtyWrap.appendChild(inc);
-      bar.appendChild(qtyWrap);
+      row.appendChild(qtyWrap);
     }
 
     var cta = document.createElement("button");
     cta.className = "searchaly-sticky__cta";
     cta.type = "button";
     cta.textContent = cfg.ctaText || "Add to cart";
-    bar.appendChild(cta);
+    row.appendChild(cta);
 
     var buyNow = null;
     if (cfg.showBuyNow) {
@@ -82,27 +115,22 @@
       buyNow.className = "searchaly-sticky__buynow";
       buyNow.type = "button";
       buyNow.textContent = "Buy now";
-      bar.appendChild(buyNow);
+      row.appendChild(buyNow);
     }
 
     document.body.appendChild(bar);
+    S.stack(bar);
 
     // --- Data --------------------------------------------------------------
     function currentVariantId() {
-      // Radio-group variant pickers: use the checked option, not the first radio.
       var checked = form.querySelector('[name="id"]:checked');
       if (checked && checked.value) return checked.value;
-      // <select name="id"> or a JS-updated hidden <input name="id"> (e.g. Dawn).
       if (idInput && idInput.type !== "radio" && idInput.value) return idInput.value;
-      // URL ?variant= fallback.
       var m = window.location.search.match(/[?&]variant=(\d+)/);
       if (m) return m[1];
-      if (product && product.variants && product.variants[0]) {
-        return String(product.variants[0].id);
-      }
+      if (product && product.variants && product.variants[0]) return String(product.variants[0].id);
       return null;
     }
-
     function currentVariant() {
       if (!product || !product.variants) return null;
       var id = currentVariantId();
@@ -111,44 +139,47 @@
       }
       return null;
     }
-
     function renderVariant() {
       var v = currentVariant();
       if (v) {
-        priceEl.textContent = window.Searchaly.money(v.price);
+        priceEl.textContent = S.money(v.price);
         cta.disabled = v.available === false;
-        if (v.available === false) cta.textContent = "Sold out";
-        else cta.textContent = cfg.ctaText || "Add to cart";
+        cta.textContent = v.available === false ? "Sold out" : cfg.ctaText || "Add to cart";
       } else {
         priceEl.textContent = "";
       }
     }
 
-    fetch("/products/" + handleMatch[1] + ".js", {
-      headers: { Accept: "application/json" },
-    })
-      .then(function (r) {
-        return r.ok ? r.json() : null;
-      })
-      .then(function (p) {
-        product = p;
-        if (p && p.title) titleEl.textContent = p.title;
-        renderVariant();
-      })
-      .catch(function () {
-        /* price stays hidden; bar still works via idInput */
-      });
-
-    // Keep the sticky bar in sync when the theme changes the selected variant.
+    if (handleMatch) {
+      fetch("/products/" + handleMatch[1] + ".js", { headers: { Accept: "application/json" } })
+        .then(function (r) {
+          return r.ok ? r.json() : null;
+        })
+        .then(function (p) {
+          product = p;
+          if (p && p.title) titleEl.textContent = p.title;
+          renderVariant();
+        })
+        .catch(function () {});
+    }
     form.addEventListener("change", renderVariant);
 
     // --- Actions -----------------------------------------------------------
-    var submitting = false;
-    function addToCart(redirectTo, sourceBtn) {
-      if (submitting) return; // guard against double-submit (both buttons share this)
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.style.display = "";
+    }
+    function clearError() {
+      errorEl.textContent = "";
+      errorEl.style.display = "none";
+    }
+
+    function addToCart(mode, sourceBtn) {
+      if (submitting) return;
       var id = currentVariantId();
       if (!id) return;
       submitting = true;
+      clearError();
       var btn = sourceBtn || cta;
       var original = btn.textContent;
       cta.disabled = true;
@@ -172,20 +203,40 @@
         })
         .then(function (res) {
           if (!res.ok) {
+            var m = res.body && (res.body.description || res.body.message);
+            showError(m || "Couldn't add to cart.");
             reset();
             return;
           }
-          window.location.href = redirectTo;
+          if (mode === "checkout") {
+            window.location.href = "/checkout";
+            return;
+          }
+          // Stay on the page: notify the theme + confirm. (core.js already fired
+          // searchaly:cart-updated from the patched fetch, so our bars refresh.)
+          try {
+            document.dispatchEvent(new CustomEvent("cart:refresh", { bubbles: true }));
+          } catch (e) {}
+          submitting = false;
+          cta.disabled = false;
+          if (buyNow) buyNow.disabled = false;
+          btn.textContent = "Added ✓";
+          setTimeout(function () {
+            btn.textContent = original;
+          }, 1600);
         })
-        .catch(reset);
+        .catch(function () {
+          showError("Network error. Please try again.");
+          reset();
+        });
     }
 
     cta.addEventListener("click", function () {
-      addToCart("/cart", cta);
+      addToCart("cart", cta);
     });
     if (buyNow) {
       buyNow.addEventListener("click", function () {
-        addToCart("/checkout", buyNow);
+        addToCart("checkout", buyNow);
       });
     }
 
@@ -196,9 +247,7 @@
       });
     } else {
       var anchor =
-        form.querySelector('[type="submit"]') ||
-        form.querySelector('[name="add"]') ||
-        form;
+        form.querySelector('[type="submit"]') || form.querySelector('[name="add"]') || form;
       if (!("IntersectionObserver" in window)) {
         bar.classList.add("is-visible");
       } else {
@@ -215,7 +264,7 @@
       }
     }
 
-    function button(label) {
+    function mkBtn(label) {
       var b = document.createElement("button");
       b.type = "button";
       b.textContent = label;

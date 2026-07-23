@@ -7,8 +7,8 @@
   right: 0;
   z-index: 2147483000;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 6px;
   padding: 10px 16px;
   box-sizing: border-box;
   background: var(--sa-bg, #111827);
@@ -19,6 +19,19 @@
   transition-property: opacity, transform, visibility;
   transition-duration: var(--sa-anim, 200ms);
   transition-timing-function: ease;
+}
+.searchaly-sticky__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.searchaly-sticky__error {
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 6px;
 }
 
 .searchaly-sticky[data-position="bottom"] {

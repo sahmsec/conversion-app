@@ -62,6 +62,29 @@ export async function upsertWidget(
   return { type, enabled: row.enabled, config: normalizeConfig(type, row.config) };
 }
 
+/**
+ * Patch ONLY the enabled flag — never touches `config`. Used by the on/off toggle
+ * so flipping a widget can't clobber saved config or commit unsaved form drafts.
+ * Seeds default config on first create.
+ */
+export async function setWidgetEnabled(
+  shop: string,
+  type: WidgetType,
+  enabled: boolean,
+): Promise<WidgetRow> {
+  const row = await prisma.widgetSettings.upsert({
+    where: { shop_type: { shop, type } },
+    create: {
+      shop,
+      type,
+      enabled,
+      config: defaultConfig(type) as unknown as Prisma.InputJsonValue,
+    },
+    update: { enabled },
+  });
+  return { type, enabled: row.enabled, config: normalizeConfig(type, row.config) };
+}
+
 /** Build the compact storefront payload for all of a shop's enabled widgets. */
 export async function getStorefrontConfig(shop: string): Promise<StorefrontConfig> {
   const rows = await prisma.widgetSettings.findMany({

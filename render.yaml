@@ -11,6 +11,7 @@ services:
     dockerfilePath: ./Dockerfile
     plan: free
     region: singapore # matches the Neon ap-southeast-1 database for low latency
+    healthCheckPath: /healthz
     envVars:
       - key: NODE_ENV
         value: production

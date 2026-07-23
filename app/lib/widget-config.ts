@@ -336,6 +336,7 @@ export function defaultConfig(type: WidgetType): WidgetConfig {
 
 export type StorefrontConfig = {
   v: 1;
+  tz?: string; // store IANA timezone, added by the sync service for scheduling
   widgets: Record<string, { global: GlobalWidgetSettings } & Record<string, unknown>>;
 };
 

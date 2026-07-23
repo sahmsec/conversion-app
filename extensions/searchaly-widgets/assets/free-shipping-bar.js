@@ -1,7 +1,7 @@
 /*
  * Searchaly Boost — Free Shipping Bar.
  * Reads the live cart total and shows progress toward a free-shipping goal.
- * Re-renders when the cart changes (via the searchaly:cart-updated event).
+ * Re-renders on cart changes; converts the goal to the visitor's currency.
  */
 (function () {
   "use strict";
@@ -10,7 +10,8 @@
   window.Searchaly.register("free-shipping-bar", function (cfg) {
     var S = window.Searchaly;
     var global = cfg.global || {};
-    var goal = Number(cfg.goalCents) || 0;
+    // goalCents is stored in the shop's primary currency; convert to presentment.
+    var goal = S.toPresentment(Number(cfg.goalCents) || 0);
 
     var bar = document.createElement("div");
     bar.className = "searchaly-bar searchaly-bar--fsb";
@@ -31,6 +32,7 @@
     }
 
     document.body.appendChild(bar);
+    S.stack(bar);
 
     function render(cart) {
       var total = cart ? Number(cart.total_price) || 0 : 0;
